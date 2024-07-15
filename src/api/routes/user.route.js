@@ -1,13 +1,12 @@
 const controller = require("../controllers/user.controller");
-const multer = require("multer");
-
+const upload = require("../../middleware/upload");
 const parseDates = (req, res, next) => {
   const { startDate, endDate } = req.query;
   req.startDate = new Date(startDate);
   req.endDate = new Date(endDate);
   next();
 };
-const upload = multer({ dest: "./uploads/" });
+
 module.exports = function (app) {
   app.post("/api/users/create", controller.signup);
   app.post(
