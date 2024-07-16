@@ -1,4 +1,4 @@
-const controller = require("../controllers/user.controller");
+const controller = require("../controllers/userController");
 const upload = require("../../middleware/upload");
 const parseDates = (req, res, next) => {
   const { startDate, endDate } = req.query;

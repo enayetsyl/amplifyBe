@@ -1,5 +1,5 @@
-const Poll = require("../models/poll.model");
-const Project = require("../models/project.model");
+const Poll = require("../models/pollModel");
+const Project = require("../models/projectModel");
 const { validationResult } = require("express-validator");
 
 // Controller to create a new poll

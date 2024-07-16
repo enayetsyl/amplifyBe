@@ -1,4 +1,4 @@
-const controller = require("../controllers/project.controller");
+const controller = require("../controllers/projectController");
 
 module.exports = function (app) {
   app.post("/api/create/project", controller.createProject);

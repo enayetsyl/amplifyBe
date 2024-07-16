@@ -1,4 +1,4 @@
-const controller = require("../controllers/poll.controller");
+const controller = require("../controllers/pollController");
 
 module.exports = function (app) {
   app.post("/api/create/poll", controller.createPoll);

@@ -1,5 +1,5 @@
 const bcrypt = require("bcryptjs");
-const Project = require("../models/project.model");
+const Project = require("../models/projectModel");
 const { validationResult } = require("express-validator");
 
 // Controller to create a new project
