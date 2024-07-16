@@ -21,7 +21,7 @@ require("./src/api/routes/addAdminRoute.js")(app);
 require("./src/api/routes/moderatorInvitationRoute.js")(app);
 require("./src/api/routes/breakoutroomRoutes.js")(app);
 require("./src/api/routes/videoRoute.js")(app);
-// app.use("/api", productController);
+require("./src/api/routes/companyRoute.js")(app);
 
 let port = process.env.PORT || 8008;
 app.listen(port, () => {

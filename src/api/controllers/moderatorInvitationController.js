@@ -133,11 +133,25 @@ const getModerator = async (req, res) => {
   }
 };
 
-// Controller function to handle get all request
+// Controller function to handle get all request with pagination
 const getAllModerators = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
+
   try {
-    const moderators = await Moderator.find().populate("project");
-    res.status(200).json(moderators);
+    const moderators = await Moderator.find()
+      .populate("project")
+      .skip((page - 1) * limit) // Skip the appropriate number of documents
+      .limit(parseInt(limit)); // Limit the number of documents
+
+    const totalDocuments = await Moderator.countDocuments(); // Total number of documents in collection
+    const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
+
+    res.status(200).json({
+      page: parseInt(page),
+      totalPages,
+      totalDocuments,
+      moderators,
+    });
   } catch (error) {
     console.error("Error retrieving moderators:", error);
     res.status(500).send("Error retrieving moderators.");

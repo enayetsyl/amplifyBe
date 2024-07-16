@@ -38,11 +38,24 @@ const createPoll = async (req, res) => {
   }
 };
 
-// Controller to get all polls
+// Controller to get all polls with pagination
 const getAllPolls = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
+
   try {
-    const polls = await Poll.find();
-    res.status(200).json(polls);
+    const polls = await Poll.find()
+      .skip((page - 1) * limit) // Skip the appropriate number of documents
+      .limit(parseInt(limit)); // Limit the number of documents
+
+    const totalDocuments = await Poll.countDocuments(); // Total number of documents in collection
+    const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
+
+    res.status(200).json({
+      page: parseInt(page),
+      totalPages,
+      totalDocuments,
+      polls,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

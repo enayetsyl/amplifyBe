@@ -16,7 +16,8 @@ const NewAdmin = new Schema(
       type: String,
     },
     company: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "Company",
     },
     password: {
       type: String,

@@ -106,11 +106,24 @@ const getBreakoutRoom = async (req, res) => {
 
 // Controller function to handle get all request
 const getAllBreakoutRooms = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
+
   try {
     const breakoutRooms = await BreakoutRoom.find()
       .populate("project")
-      .populate("participants");
-    res.status(200).json(breakoutRooms);
+      .populate("participants")
+      .skip((page - 1) * limit) // Skip the appropriate number of documents
+      .limit(parseInt(limit)); // Limit the number of documents
+
+    const totalDocuments = await BreakoutRoom.countDocuments(); // Total number of documents in collection
+    const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
+
+    res.status(200).json({
+      page: parseInt(page),
+      totalPages,
+      totalDocuments,
+      breakoutRooms,
+    });
   } catch (error) {
     console.error("Error retrieving breakout rooms:", error);
     res.status(500).send("Error retrieving breakout rooms.");
