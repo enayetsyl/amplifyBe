@@ -22,14 +22,14 @@ const createProject = async (req, res) => {
     endDate,
   } = req.body;
 
+  console.log(req.body); // Log the request body to the console
+
   try {
-    // Hash the passcode using bcryptjs if provided
     let hashedPasscode = passcode;
     if (passcode) {
-      hashedPasscode = await bcrypt.hash(passcode, 8); // Adjust saltRounds as per your security requirements
+      hashedPasscode = await bcrypt.hash(passcode, 8);
     }
 
-    // Create a new project instance with hashed passcode and endDate
     const newProject = new Project({
       name,
       description,
@@ -48,10 +48,9 @@ const createProject = async (req, res) => {
       endDate,
     });
 
-    // Save the project to the database
+    console.log("saved", newProject);
     const savedProject = await newProject.save();
-
-    res.status(201).json(savedProject); // Respond with the saved project
+    res.status(201).json(savedProject);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -151,9 +150,9 @@ const updateProject = async (req, res) => {
   }
 };
 
-// Controller to delete a project
 const deleteProject = async (req, res) => {
-  const { id } = req.params;
+  console.log("f", req);
+  const { id } = req.params; // Extract ID from request parameters
   try {
     const deletedProject = await Project.findByIdAndDelete(id);
     if (!deletedProject) {
@@ -164,6 +163,8 @@ const deleteProject = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// DELETE route
 
 module.exports = {
   createProject,

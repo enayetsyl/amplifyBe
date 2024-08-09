@@ -39,26 +39,31 @@ const ProjectSchema = new Schema({
   },
   participants: [
     {
-      type: Schema.Types.ObjectId,
-      ref: "User",
+      name: String,
+      email: String,
     },
   ],
   observers: [
     {
-      type: Schema.Types.ObjectId,
-      ref: "User",
+      name: String,
+      email: String,
     },
   ],
   breakoutRooms: [
     {
-      type: Schema.Types.ObjectId,
-      ref: "BreakoutRoom",
+      name: String,
+      participants: [Schema.Types.ObjectId],
+      interpreter: Boolean,
+      interpreterName: String,
+      interpreterEmail: String,
+      interpreterLanguage: String,
     },
   ],
   polls: [
     {
-      type: Schema.Types.ObjectId,
-      ref: "Poll",
+      name: String,
+      active: Boolean,
+      questions: [String],
     },
   ],
   interpreters: [
@@ -67,7 +72,7 @@ const ProjectSchema = new Schema({
       ref: "User",
     },
   ],
-  psscode: {
+  passcode: {
     type: String,
   },
   createdAt: {
@@ -82,6 +87,7 @@ const ProjectSchema = new Schema({
     type: Date,
   },
 });
+
 
 const Project = mongoose.model("Project", ProjectSchema);
 

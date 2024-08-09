@@ -3,13 +3,13 @@ const Project = require("../models/projectModel"); // Adjust the path as necessa
 
 // Controller function to handle create request
 const createBreakoutRoom = async (req, res) => {
+console.log("braeck")
   const { project, name, participants, duration, interpretor } = req.body;
-
   // Validate input data
   if (!project || !name || !duration) {
     return res.status(400).send("Project, name, and duration are required.");
   }
-
+  console.log("H")
   try {
     const projectDoc = await Project.findById(project);
     if (!projectDoc) {
@@ -34,6 +34,7 @@ const createBreakoutRoom = async (req, res) => {
 
 // Controller function to handle update request
 const updateBreakoutRoom = async (req, res) => {
+  console.log("1")
   const { id } = req.params;
   const { project, name, participants, duration, interpretor } = req.body;
 

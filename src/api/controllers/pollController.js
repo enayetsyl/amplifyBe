@@ -10,7 +10,7 @@ const createPoll = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { project, pollName, isActive, question, options, choice } = req.body;
+  const { project, pollName, isActive, questions, choice } = req.body;
 
   try {
     // Check if the project exists
@@ -24,8 +24,7 @@ const createPoll = async (req, res) => {
       project,
       pollName,
       isActive,
-      question,
-      options,
+      questions, // Now expecting an array of questions
       choice,
     });
 
@@ -38,8 +37,10 @@ const createPoll = async (req, res) => {
   }
 };
 
+
 // Controller to get all polls with pagination
 const getAllPolls = async (req, res) => {
+  console.log("h1")
   const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
 
   try {
@@ -78,7 +79,7 @@ const getPollById = async (req, res) => {
 // Controller to update a poll
 const updatePoll = async (req, res) => {
   const { id } = req.params;
-  const { pollName, isActive, question, options, choice } = req.body;
+  const { pollName, isActive, questions, options, choice } = req.body;
 
   try {
     const updatedPoll = await Poll.findByIdAndUpdate(
@@ -86,7 +87,7 @@ const updatePoll = async (req, res) => {
       {
         pollName,
         isActive,
-        question,
+        questions,
         options,
         choice,
       },

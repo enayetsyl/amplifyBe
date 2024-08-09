@@ -15,14 +15,25 @@ const PollSchema = new Schema({
   isActive: {
     type: Boolean,
   },
-  question: {
-    type: String,
-    required: true,
-  },
-  options: [
+  questions: [
     {
-      type: String,
-      required: true,
+      question: {
+        type: String,
+        required: true,
+      },
+      type: {
+        type: String,
+        enum: ['single', 'multiple'],
+        default: 'single',
+      },
+      answers: [
+        {
+          answer: {
+            type: String,
+            required: true,
+          },
+        },
+      ],
     },
   ],
   choice: {
@@ -35,7 +46,7 @@ const PollSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "User",
       },
-      answer: [String],
+      answers: [String],
     },
   ],
 });

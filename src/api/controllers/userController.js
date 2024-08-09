@@ -43,9 +43,10 @@ const validateEmail = (email) => {
 };
 
 const signup = async (req, res) => {
+  console.log("hello")
   try {
     const { firstName, lastName, email, password, role } = req.body;
-
+console.log(req.body)
     if (!(firstName && lastName && email && password && role)) {
       return res
         .status(400)
@@ -53,6 +54,7 @@ const signup = async (req, res) => {
     }
 
     const emailError = validateEmail(email);
+    console.log(emailError)
     if (emailError) {
       return res.status(400).json({ message: emailError, status: 400 });
     }
