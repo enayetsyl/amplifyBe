@@ -103,8 +103,9 @@ module.exports = { updateModerator };
 
 // Controller function to handle delete request
 const deleteModerator = async (req, res) => {
-  const { id } = req.params;
-
+  console.log("hi")
+  const  id  = req.query.id;
+console.log(id)
   try {
     const deletedModerator = await Moderator.findByIdAndDelete(id);
 
