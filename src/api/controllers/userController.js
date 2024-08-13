@@ -43,56 +43,67 @@ const validateEmail = (email) => {
 };
 
 const signup = async (req, res) => {
-  console.log("hello")
   try {
-    const { firstName, lastName, email, password, role } = req.body;
-console.log(req.body)
-    if (!(firstName && lastName && email && password && role)) {
-      return res
-        .status(400)
-        .json({ message: `All fields are required`, status: 400 });
-    }
+    const { firstName, lastName, email, password, terms } = req.body;
 
+    // Log the received body for debugging
+    console.log("Received data:", req.body);
+
+    // Validate required fields
+    if (!(firstName && lastName && email && password && terms !== undefined)) {
+      return res.status(400).json({ message: "All fields are required", status: 400 });
+    }
+console.log('required field given')
+    // Validate email format
     const emailError = validateEmail(email);
-    console.log(emailError)
     if (emailError) {
       return res.status(400).json({ message: emailError, status: 400 });
     }
-
+console.log('email is valid')
+    // Validate password criteria
     const passwordErrors = validatePassword(password);
     if (passwordErrors) {
-      return res
-        .status(400)
-        .json({ message: passwordErrors.join(" "), status: 400 });
+      return res.status(400).json({ message: passwordErrors.join(" "), status: 400 });
     }
-
-    const userExist = await userModel.findOne({ email: email }).select("_id");
+console.log('password is ok')
+    // Check if the user already exists
+    const userExist = await userModel.findOne({ email }).select("_id");
     if (userExist) {
-      return res
-        .status(400)
-        .json({ message: "Email already in use", status: 400 });
+      return res.status(400).json({ message: "Email already in use", status: 400 });
     }
+console.log('user exist', userExist)
+    // Hash the password before saving it in the database
+    const hashedPassword = bcrypt.hashSync(password, 8);
 
+    // Create new user with all necessary data
     const newUser = new userModel({
       firstName,
       lastName,
       email,
-      password: bcrypt.hashSync(password, 8),
-      role,
+      password: hashedPassword,
+      role: 'Admin',  // Default role set to 'Admin'
+      isEmailVerified: false,  // Default to false until email is verified
+      termsAccepted: terms,  // Capture acceptance of terms
+      termsAcceptedTime: new Date()  // Log the timestamp of the acceptance
     });
-
+    console.log(newUser)
+    // Save the new user
     await newUser.save();
 
+    // Send a verification email
     sendVerifyEmail(firstName, email, newUser._id);
 
+    // Respond with success message
     return res.status(200).json({
       message: "User registered successfully. Please verify your email!",
       status: 200,
     });
   } catch (error) {
+    console.error("Signup error:", error);
     return res.status(500).json({ message: error.message, status: 500 });
   }
 };
+
 
 const signin = async (req, res) => {
   try {
