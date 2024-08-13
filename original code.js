@@ -11,11 +11,9 @@ const server = https.createServer({
 }, app);
 const wss = new WebSocket.Server({ server });
 
-let rooms = {};
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => {
-    res.send('Server is running.');
-});
+let rooms = {};
 
 const getParticipants = (roomId, parentRoomId = null) => {
     if (parentRoomId) {
