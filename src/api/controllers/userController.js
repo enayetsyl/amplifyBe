@@ -53,25 +53,21 @@ const signup = async (req, res) => {
     if (!(firstName && lastName && email && password && terms !== undefined)) {
       return res.status(400).json({ message: "All fields are required", status: 400 });
     }
-console.log('required field given')
     // Validate email format
     const emailError = validateEmail(email);
     if (emailError) {
       return res.status(400).json({ message: emailError, status: 400 });
     }
-console.log('email is valid')
     // Validate password criteria
     const passwordErrors = validatePassword(password);
     if (passwordErrors) {
       return res.status(400).json({ message: passwordErrors.join(" "), status: 400 });
     }
-console.log('password is ok')
     // Check if the user already exists
     const userExist = await userModel.findOne({ email }).select("_id");
     if (userExist) {
       return res.status(400).json({ message: "Email already in use", status: 400 });
     }
-console.log('user exist', userExist)
     // Hash the password before saving it in the database
     const hashedPassword = bcrypt.hashSync(password, 8);
 
@@ -86,9 +82,9 @@ console.log('user exist', userExist)
       termsAccepted: terms,  // Capture acceptance of terms
       termsAcceptedTime: new Date()  // Log the timestamp of the acceptance
     });
-    console.log(newUser)
     // Save the new user
     await newUser.save();
+    console.log('new registered user',newUser)
 
     // Send a verification email
     sendVerifyEmail(firstName, email, newUser._id);
@@ -125,19 +121,17 @@ const signin = async (req, res) => {
 
     await userModel.findByIdAndUpdate(user._id, { token: token });
 
+    console.log('login user', user)
+
     return res.status(200).json({
       _id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
       role: user.role,
-      status: user.status,
       isEmailVerified: user.isEmailVerified,
-      createdBy: user.createdBy,
-      joinedOn: user.joinedOn,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      lastLoginAt: user.lastLoginAt,
       accessToken: token,
     });
   } catch (error) {
