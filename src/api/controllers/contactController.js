@@ -92,14 +92,13 @@ const updateContact = async (req, res) => {
 };
 
 const deleteContact = async (req, res) => {
-  console.log("f", req);
-  const { id } = req.params; // Extract ID from request parameters
+  const { id } = req.params;
   try {
-    const deletedProject = await Project.findByIdAndDelete(id);
-    if (!deletedProject) {
-      return res.status(404).json({ message: "Project not found" });
+    const deletedContact = await Contact.findByIdAndDelete(id);
+    if (!deletedContact) {
+      return res.status(404).json({ message: "Contact not found" });
     }
-    res.status(200).json({ message: "Project deleted successfully" });
+    res.status(200).json({ message: "Contact deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
