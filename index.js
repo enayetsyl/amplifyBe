@@ -16,6 +16,7 @@ app.use(bodyParser.json({ limit: "50mb" }));
 require("./src/api/routes/userRoute.js")(app);//done--tested
 require("./src/api/routes/pollRoute.js")(app);//done--tested
 require("./src/api/routes/projectRoute.js")(app);//done--tested
+require("./src/api/routes/contactRoute.js")(app);//done--tested
 require("./src/api/routes/meetingLinkRoute.js")(app);//not made or presnt in Original Module--rehman integrated
 require("./src/api/routes/addAdminRoute.js")(app);//pending UI--not Initiated
 require("./src/api/routes/moderatorInvitationRoute.js")(app);//done
