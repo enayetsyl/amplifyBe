@@ -35,18 +35,18 @@ const getAllContacts = async (req, res) => {
   const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
 
   try {
-    const projects = await Project.find()
+    const contacts = await Contact.find()
       .skip((page - 1) * limit) // Skip the appropriate number of documents
       .limit(parseInt(limit)); // Limit the number of documents
-
-    const totalDocuments = await Project.countDocuments(); // Total number of documents in collection
+console.log('all contacts', contacts)
+    const totalDocuments = await Contact.countDocuments(); // Total number of documents in collection
     const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
 
     res.status(200).json({
       page: parseInt(page),
       totalPages,
       totalDocuments,
-      projects,
+      contacts,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
