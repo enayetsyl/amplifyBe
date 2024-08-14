@@ -58,7 +58,7 @@ const createProject = async (req, res) => {
 
 // Controller to get all projects with pagination
 const getAllProjects = async (req, res) => {
-  console.log('hi')
+  
   const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
 
   try {

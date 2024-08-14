@@ -2,11 +2,11 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const contactSchema = new mongoose.Schema({
-  first_name: {
+  firstName: {
     type: String,
     required: true,
   },
-  last_name: {
+  lastName: {
     type: String,
     required: true,
   },
@@ -16,7 +16,7 @@ const contactSchema = new mongoose.Schema({
     unique: true,
     match: /.+\@.+\..+/,
   },
-  company_name: {
+  companyName: {
     type: String,
   },
   roles: [{
@@ -45,3 +45,4 @@ contactSchema.pre('save', function (next) {
 });
 
 const Contact = mongoose.model('Contact', contactSchema);
+module.exports = Contact;

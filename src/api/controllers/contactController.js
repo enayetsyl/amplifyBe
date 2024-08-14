@@ -1,64 +1,30 @@
 const bcrypt = require("bcryptjs");
-const Project = require("../models/projectModel");
+const Contact = require("../models/contactModel");
 const { validationResult } = require("express-validator");
 
 // Controller to create a new project
-const createProject = async (req, res) => {
-  const {
-    name,
-    description,
-    startDate,
-    status,
-    creator,
-    moderator,
-    startTime,
-    timeZone,
-    participants,
-    observers,
-    breakoutRooms,
-    polls,
-    interpreters,
-    passcode,
-    endDate,
-  } = req.body;
+const createContact = async (req, res) => {
+  const { firstName, lastName, email, companyName, roles, createdBy  } = req.body;
 
-  console.log(req.body); // Log the request body to the console
+  console.log('req body', req.body); // Log the request body to the console
 
   try {
-    let hashedPasscode = passcode;
-    if (passcode) {
-      hashedPasscode = await bcrypt.hash(passcode, 8);
-    }
-
-    const newProject = new Project({
-      name,
-      description,
-      startDate,
-      status,
-      creator,
-      moderator,
-      startTime,
-      timeZone,
-      participants: participants || [],
-      observers: observers || [],
-      breakoutRooms: breakoutRooms || [],
-      polls: polls || [],
-      interpreters: interpreters || [],
-      passcode: hashedPasscode,
-      endDate,
+     const newContact = new Contact({
+      firstName, lastName, email, companyName, roles, createdBy
     });
 
-    console.log("saved", newProject);
-    const savedProject = await newProject.save();
-    res.status(201).json(savedProject);
+    console.log("saved", newContact);
+    const savedContact = await newContact.save();
+    res.status(201).json(savedContact);
   } catch (error) {
+    console.log(error)
     res.status(500).json({ message: error.message });
   }
 };
 
 // Controller to get all projects with pagination
-const getAllProjects = async (req, res) => {
-  console.log('hi')
+const getAllContacts = async (req, res) => {
+ 
   const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
 
   try {
@@ -81,7 +47,7 @@ const getAllProjects = async (req, res) => {
 };
 
 // Controller to get a project by ID
-const getProjectById = async (req, res) => {
+const getContactById = async (req, res) => {
   const { id } = req.params;
   try {
     const project = await Project.findById(id);
@@ -95,7 +61,7 @@ const getProjectById = async (req, res) => {
 };
 
 // Controller to update a project
-const updateProject = async (req, res) => {
+const updateContact = async (req, res) => {
   const { id } = req.params;
   const {
     name,
@@ -151,7 +117,7 @@ const updateProject = async (req, res) => {
   }
 };
 
-const deleteProject = async (req, res) => {
+const deleteContact = async (req, res) => {
   console.log("f", req);
   const { id } = req.params; // Extract ID from request parameters
   try {
@@ -168,9 +134,9 @@ const deleteProject = async (req, res) => {
 // DELETE route
 
 module.exports = {
-  createProject,
-  getAllProjects,
-  getProjectById,
-  updateProject,
-  deleteProject,
+  createContact,
+  getAllContacts,
+  getContactById,
+  updateContact,
+  deleteContact,
 };
