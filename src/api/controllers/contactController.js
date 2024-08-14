@@ -8,6 +8,13 @@ const createContact = async (req, res) => {
 
   console.log('req body', req.body); // Log the request body to the console
 
+ // Validation to check if all required fields are present
+ if (!firstName || !lastName || !email || !companyName || !roles || !createdBy) {
+  return res.status(400).json({
+    message: "All fields are required: firstName, lastName, email, companyName, roles, createdBy."
+  });
+}
+
   try {
      const newContact = new Contact({
       firstName, lastName, email, companyName, roles, createdBy
