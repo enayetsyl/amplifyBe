@@ -11,17 +11,19 @@ app.use(express.urlencoded({ extended: true }));
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json({ limit: "50mb" }));
+const uploadFileRoutes = require("./src/api/routes/uploadFileRoute");
 
 // Routes
-require("./src/api/routes/userRoute.js")(app);//done--tested
-require("./src/api/routes/pollRoute.js")(app);//done--tested
-require("./src/api/routes/projectRoute.js")(app);//done--tested
-require("./src/api/routes/meetingLinkRoute.js")(app);//not made or presnt in Original Module--rehman integrated
-require("./src/api/routes/addAdminRoute.js")(app);//pending UI--not Initiated
-require("./src/api/routes/moderatorInvitationRoute.js")(app);//done
-require("./src/api/routes/breakoutroomRoutes.js")(app);//done -- 1api pending
-require("./src/api/routes/videoRoute.js")(app);//pending UI--Dependency WebRTC
-require("./src/api/routes/companyRoute.js")(app);//pending UI--not Inititiate
+require("./src/api/routes/userRoute.js")(app); //done--tested
+require("./src/api/routes/pollRoute.js")(app); //done--tested
+require("./src/api/routes/projectRoute.js")(app); //done--tested
+require("./src/api/routes/meetingLinkRoute.js")(app); //not made or presnt in Original Module--rehman integrated
+require("./src/api/routes/addAdminRoute.js")(app); //pending UI--not Initiated
+require("./src/api/routes/moderatorInvitationRoute.js")(app); //done
+require("./src/api/routes/breakoutroomRoutes.js")(app); //done -- 1api pending
+require("./src/api/routes/videoRoute.js")(app); //pending UI--Dependency WebRTC
+require("./src/api/routes/companyRoute.js")(app); //pending UI--not Inititiate
+app.use("/api", uploadFileRoutes);
 
 let port = process.env.PORT || 8008;
 app.listen(port, () => {
