@@ -50,15 +50,15 @@ const createProject = async (req, res) => {
 
 // Controller to get all projects with pagination
 const getAllProjects = async (req, res) => {
-  
   const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
+  const { id } = req.params; // Get the user ID from the route parameters
 
   try {
-    const projects = await Project.find()
+    // Find projects where createdBy matches the provided user ID
+    const projects = await Project.find({ createdBy: id })
       .skip((page - 1) * limit) // Skip the appropriate number of documents
       .limit(parseInt(limit)); // Limit the number of documents
-
-    const totalDocuments = await Project.countDocuments(); // Total number of documents in collection
+    const totalDocuments = await Project.countDocuments({ createdBy: id }); // Total number of documents for this user
     const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
 
     res.status(200).json({
@@ -71,6 +71,9 @@ const getAllProjects = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+module.exports = getAllProjects;
+
 
 // Controller to get a project by ID
 const getProjectById = async (req, res) => {
