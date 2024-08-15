@@ -4,55 +4,47 @@ const { validationResult } = require("express-validator");
 
 // Controller to create a new project
 const createProject = async (req, res) => {
-  const {
-    name,
-    description,
-    startDate,
-    status,
-    creator,
-    moderator,
-    startTime,
-    timeZone,
-    participants,
-    observers,
-    breakoutRooms,
-    polls,
-    interpreters,
-    passcode,
-    endDate,
-  } = req.body;
-
-  console.log(req.body); // Log the request body to the console
-
   try {
-    let hashedPasscode = passcode;
-    if (passcode) {
-      hashedPasscode = await bcrypt.hash(passcode, 8);
-    }
-
+    // Extract formData from the request body
+    const formData = req.body;
+    console.log('form data', formData)
+    // Create the new project object
     const newProject = new Project({
-      name,
-      description,
-      startDate,
-      status,
-      creator,
-      moderator,
-      startTime,
-      timeZone,
-      participants: participants || [],
-      observers: observers || [],
-      breakoutRooms: breakoutRooms || [],
-      polls: polls || [],
-      interpreters: interpreters || [],
-      passcode: hashedPasscode,
-      endDate,
+      projectName: formData.projectName,
+      projectDescription: formData.projectDescription,
+      endDate: formData.endDate,
+      projectPasscode: formData.projectPasscode,
+      createdBy: formData.createdBy,
+      people: formData.people,
+      meetingTitle: formData.meetingTitle,
+      meetingModerator: formData.meetingModerator,
+      meetingDescription: formData.meetingDescription,
+      startDate: formData.startDate,
+      startTime: formData.startTime,
+      timeZone: formData.timeZone,
+      duration: formData.duration,
+      ongoing: formData.ongoing,
+      enableBreakoutRoom: formData.enableBreakoutRoom,
+      meetingPasscode: formData.meetingPasscode,
+      status: 'Draft', 
+      tags: formData.tags || [], 
+      role: formData.role || [] 
     });
 
-    console.log("saved", newProject);
-    const savedProject = await newProject.save();
-    res.status(201).json(savedProject);
+    // Save the project to the database
+    await newProject.save();
+
+    // Send a success response back to the frontend
+    res.status(201).json({
+      message: 'Project created successfully',
+      project: newProject
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error creating project:', error);
+    res.status(500).json({
+      message: 'Failed to create project',
+      error: error.message
+    });
   }
 };
 
