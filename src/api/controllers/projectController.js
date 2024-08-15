@@ -28,7 +28,7 @@ const createProject = async (req, res) => {
       meetingPasscode: formData.meetingPasscode,
       status: 'Draft', 
       tags: formData.tags || [], 
-      role: formData.role || [] 
+      // role: formData.role || [] 
     });
 
     // Save the project to the database
@@ -54,11 +54,22 @@ const getAllProjects = async (req, res) => {
   const { id } = req.params; // Get the user ID from the route parameters
 
   try {
-    // Find projects where createdBy matches the provided user ID
-    const projects = await Project.find({ createdBy: id })
+    // Find projects where createdBy matches the provided user ID or userId in the people array matches the user ID
+    const projects = await Project.find({
+      $or: [
+        { createdBy: id },
+        { 'people.userId': id }
+      ]
+    })
       .skip((page - 1) * limit) // Skip the appropriate number of documents
       .limit(parseInt(limit)); // Limit the number of documents
-    const totalDocuments = await Project.countDocuments({ createdBy: id }); // Total number of documents for this user
+
+    const totalDocuments = await Project.countDocuments({
+      $or: [
+        { createdBy: id },
+        { 'people.userId': id }
+      ]
+    }); // Total number of documents matching the criteria
     const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
 
     res.status(200).json({
@@ -71,9 +82,6 @@ const getAllProjects = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-module.exports = getAllProjects;
-
 
 // Controller to get a project by ID
 const getProjectById = async (req, res) => {

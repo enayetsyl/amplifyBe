@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const personSchema = new Schema({
+  userId: {
+    type: String,
+    required: true,
+    trim: true
+  },
   firstName: {
     type: String,
     required: true,
@@ -12,31 +17,15 @@ const personSchema = new Schema({
     required: true,
     trim: true
   },
-  email: {
+  role: {
     type: String,
-    required: true,
-    trim: true
-  },
-  companyName: {
-    type: String,
-    trim: true
-  },
-  roles: {
-    type: [String], // Array of roles
     required: true,
     enum: ['Admin', 'Moderator', 'Observer'], 
   },
-  hasAccount: {
-    type: Boolean,
-    default: false
-  },
-  isEditable: {
-    type: Boolean,
-    default: true
-  },
   inviteLink: {
     type: String,
-    trim: true
+    trim: true,
+    default: ""
   },
   added_date: {
     type: Date,
@@ -134,19 +123,19 @@ const projectSchema = new Schema({
     type: [String], // Array of tags
     default: []
   },
-  role: {
-    type: [String], // Array of roles
-    enum: [
-      'Admin',
-      'Moderator',
-      'Observer',
-      'Admin + Moderator',
-      'Moderator + Observer',
-      'Admin + Observer',
-      'Admin + Observer + Moderator'
-    ],
-    default: []
-  },
+  // role: {
+  //   type: [String], // Array of roles
+  //   enum: [
+  //     'Admin',
+  //     'Moderator',
+  //     'Observer',
+  //     'Admin + Moderator',
+  //     'Moderator + Observer',
+  //     'Admin + Observer',
+  //     'Admin + Observer + Moderator'
+  //   ],
+  //   default: []
+  // },
   createdAt: {
     type: Date,
     default: Date.now
