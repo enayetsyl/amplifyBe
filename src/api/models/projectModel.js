@@ -123,19 +123,7 @@ const projectSchema = new Schema({
     type: [String], // Array of tags
     default: []
   },
-  // role: {
-  //   type: [String], // Array of roles
-  //   enum: [
-  //     'Admin',
-  //     'Moderator',
-  //     'Observer',
-  //     'Admin + Moderator',
-  //     'Moderator + Observer',
-  //     'Admin + Observer',
-  //     'Admin + Observer + Moderator'
-  //   ],
-  //   default: []
-  // },
+
   createdAt: {
     type: Date,
     default: Date.now
@@ -155,3 +143,23 @@ projectSchema.pre('save', function (next) {
 const Project = mongoose.model('Project', projectSchema);
 
 module.exports = Project;
+
+
+const projectSchema = new Schema({
+  name: { type: String, required: true },
+  description: { type: String },
+  startDate: { type: Date, required: true },
+  endDate: { type: Date },
+  status: { type: String, enum: ['Draft', 'Active', 'Complete', 'Inactive', 'Closed'], default: 'Draft' },
+  createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  members: [
+    {
+      userId: { type: Schema.Types.ObjectId, ref: 'User' },
+      role: { type: String, enum: ['Admin', 'Moderator', 'Observer'] }
+    }
+  ],
+  tags: [String],
+  passcode: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
