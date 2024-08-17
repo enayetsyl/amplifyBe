@@ -14,8 +14,8 @@ const projectSchema = new Schema({
       role: { type: String, enum: ['Admin', 'Moderator', 'Observer'] }
     }
   ],
-  tags: [String],
-  passcode: { type: String, required: true },
+  tags: {type: [String], default: []},
+  projectPasscode: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

@@ -6,17 +6,35 @@ const meetingSchema = new Schema({
   title: { type: String, required: true },
   description: { type: String },
   startDate: { type: Date, required: true },
-  endDate: { type: Date },
-  moderator: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  status: { 
-    type: String, 
-    enum: ['Draft', 'Scheduled', 'In Progress', 'Completed', 'Cancelled', 'Closed'], 
-    default: 'Draft' 
+
+  moderator: { type: mongoose.Schema.Types.ObjectId, ref: 'Contact', required: true },
+  startTime: {
+    type: String,
+    required: true,
+    trim: true
   },
-  passcode: { type: String, required: true },
-  breakoutRoom: { type: Boolean, default: false }
+  timeZone: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  duration: {
+    type: String
+  },
+  ongoing: {
+    type: Boolean,
+    default: false
+  },
+  enableBreakoutRoom: {
+    type: Boolean,
+    default: false
+  },
+
+  meetingPasscode: { type: String, required: true },
+
 });
 
 const Meeting = mongoose.model('Meeting', meetingSchema);
 
 module.exports = Meeting;
+
