@@ -4,6 +4,7 @@ const path = require('path');
 
 // POST - Upload File
 exports.uploadFile = (req, res) => {
+  console.log("he")
   const file = req.file;
 console.log(file)
   if (!file) {
