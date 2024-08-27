@@ -3,6 +3,7 @@ const Project = require("../models/projectModel");
 const { validationResult } = require("express-validator");
 const mongoose = require('mongoose');
 const Meeting = require("../models/meetingModel");
+const User = require("../models/userModel");
 
 // Controller to create a new project
 const createProject = async (req, res) => { 
@@ -72,10 +73,14 @@ const getAllProjects = async (req, res) => {
 console.log('get all projects id', id)
   try {
     // Find projects where createdBy matches the provided user ID or userId in the people array matches the user ID
+    const userData = await User.findById(id)
+    console.log('user data', userData)
+    const userEmail = userData.email;
+    
     const projects = await Project.find({
       $or: [
         { createdBy: id },
-        { 'members.userId': id }
+        { 'members.email': userEmail }
       ]
     })
       .skip((page - 1) * limit) // Skip the appropriate number of documents
@@ -84,7 +89,7 @@ console.log('get all projects id', id)
     const totalDocuments = await Project.countDocuments({
       $or: [
         { createdBy: id },
-        { 'members.userId': id }
+        { 'members.email': userEmail }
       ]
     }); // Total number of documents matching the criteria
     const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
