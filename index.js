@@ -166,6 +166,12 @@ participantNamespace.on("connection", (socket) => {
     }
   });
 
+// Handle meeting start event from moderator
+socket.on("startMeeting", () => {
+  console.log("Meeting has started");
+  participantNamespace.emit("meetingStarted"); // Broadcast to all observers
+});
+
   // Handle participant disconnection
   socket.on("disconnect", () => {
     console.log("Participant Disconnected:", socket.id);
