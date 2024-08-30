@@ -1,30 +1,30 @@
 // controllers/meetingController.js
 const Meeting = require("../models/meetUserModal");
 
-// Helper function to create a slug from email and roomName
-const createSlug = (email, roomName) => {
-  const sanitizedEmail = email.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase();
+// Helper function to create a slug from userName and roomName
+const createSlug = (userName, roomName) => {
+  const sanitizeduserName = userName.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase();
   const sanitizedRoomName = roomName
     .replace(/[^a-zA-Z0-9]/g, "-")
     .toLowerCase();
-  return `${sanitizedEmail}-${sanitizedRoomName}`;
+  return `${sanitizeduserName}-${sanitizedRoomName}`;
 };
 
 // Add a new participant to a room
 exports.addParticipant = async (req, res) => {
-  const { roomName, email } = req.body;
+  const { roomName, userName } = req.body;
 
   try {
-    // Check if the email already exists in the room
-    const existingParticipant = await Meeting.findOne({ roomName, email });
+    // Check if the userName already exists in the room
+    const existingParticipant = await Meeting.findOne({ roomName, userName });
     if (existingParticipant) {
       return res
         .status(400)
-        .json({ message: "Email is already in use for this room" });
+        .json({ message: "userName is already in use for this room" });
     }
 
     // Create a new meeting participant
-    const newParticipant = new Meeting({ roomName, email });
+    const newParticipant = new Meeting({ roomName, userName });
     await newParticipant.save();
 
     res.status(201).json({
@@ -40,13 +40,13 @@ exports.addParticipant = async (req, res) => {
 
 // Remove a participant from a room
 exports.removeParticipant = async (req, res) => {
-  const { roomName, email } = req.body;
+  const { roomName, userName } = req.body;
 
   try {
-    // Find and delete the participant based on roomName and email
+    // Find and delete the participant based on roomName and userName
     const deletedParticipant = await Meeting.findOneAndDelete({
       roomName,
-      email,
+      userName,
     });
 
     if (!deletedParticipant) {
@@ -72,13 +72,13 @@ exports.getUserDetailsBySlug = async (req, res) => {
   const { slug } = req.params;
 
   try {
-    // Extract email and roomName from the slug
-    const [email, roomName] = slug
+    // Extract userName and roomName from the slug
+    const [userName, roomName] = slug
       .split("-")
       .map((part) => part.replace(/-/g, " "));
 
-    // Find the user in the database based on email and roomName
-    const user = await Meeting.findOne({ roomName, email });
+    // Find the user in the database based on userName and roomName
+    const user = await Meeting.findOne({ roomName, userName });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
