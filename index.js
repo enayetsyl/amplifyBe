@@ -11,8 +11,9 @@ app.use(express.urlencoded({ extended: true }));
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json({ limit: "50mb" }));
-
+const meetuserRoute = require("./src/api/routes/MeetUserRoutes.js");
 // Routes
+app.use("/meetuser", meetuserRoute);
 require("./src/api/routes/userRoute.js")(app);
 require("./src/api/routes/pollRoute.js")(app);
 require("./src/api/routes/projectRoute.js")(app);
