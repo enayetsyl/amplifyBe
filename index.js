@@ -9,9 +9,10 @@ const http = require("http").createServer(app);
 const io = require("socket.io")(http, {
   cors: {
     origin: "*", // Allow all origins. You can specify your frontend URL instead of "*"
-    methods: ["GET", "POST"]
-  }
-});const cors = require("cors");
+    methods: ["GET", "POST"],
+  },
+});
+const cors = require("cors");
 
 dotenv.config();
 app.use(cors());
@@ -38,10 +39,13 @@ require("./src/api/routes/companyRoute.js")(app);
 
 // Connect to MongoDB
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(
+    "mongodb+srv://backroom:backroom12072014@backroom.obewdyx.mongodb.net/",
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  )
   .then(() => console.log("Database Connected"))
   .catch((error) => console.log("Database connection error:", error));
 
@@ -50,7 +54,7 @@ mongoose
 // Middleware setup
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    secret: "thisismysessionseceret",
     resave: false,
     saveUninitialized: true,
   })
@@ -61,7 +65,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Use the user routes
 app.use("/", userRoutes);
 app.use("/api", uploadFileRoutes);
-app.use('/meetuser', MeetUserRoutes);
+app.use("/meetuser", MeetUserRoutes);
 
 // Socket.IO namespace
 const usp = io.of("/user-namespace"); // Creating our own namespace for communication
@@ -85,9 +89,9 @@ usp.on("connection", async function (socket) {
 
   // Chat implementation
   socket.on("newChat", function (data) {
-    console.log(data)
+    console.log(data);
     socket.broadcast.emit("loadNewChat", data);
-    console.log(data,"88")
+    console.log(data, "88");
   });
 
   // Load old chats
@@ -100,8 +104,8 @@ usp.on("connection", async function (socket) {
     });
 
     // Emit chats to frontend
-    socket.emit("loadChats", { chats: chats },()=>{
-      console.log(chats)
+    socket.emit("loadChats", { chats: chats }, () => {
+      console.log(chats);
     });
   });
 });

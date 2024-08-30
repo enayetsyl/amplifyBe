@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 mongoose.set("strictQuery", false);
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect("mongodb+srv://backroom:backroom12072014@backroom.obewdyx.mongodb.net/")
   .then(() => {
     console.log("Connected to the database");
   })
