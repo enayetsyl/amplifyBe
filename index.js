@@ -8,6 +8,8 @@ const app = express();
 const http = require("http").createServer(app);
 const jwt = require('jsonwebtoken');
 const cors = require("cors");
+const { Timestamp } = require('mongodb');
+
 
 const io = require("socket.io")(http, {
   cors: {
@@ -51,79 +53,19 @@ mongoose
   .then(() => console.log("Database Connected"))
   .catch((error) => console.log("Database connection error:", error));
 
-// SOCKET FOR CHAT
 
-// Socket.IO namespace
-const usp = io.of("/user-namespace"); // Creating our own namespace for communication
-
-// Middleware to verify JWT token
-usp.use((socket, next) => {
-  console.log('middleware hit')
-  const token = socket.handshake.auth.token;
-  console.log('Token received:', token); // Log the token received from the client
-
-  if (!token) {
-    return next(new Error("Authentication error: Token not provided"));
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    console.log('Decoded token:', decoded); // Log the decoded token
-    socket.userId = decoded.id;  // Extract and attach user ID
-    socket.userName = decoded.name;  // Extract and attach user name
-    next();
-  } catch (err) {
-    console.log("JWT verification failed:", err.message);
-    next(new Error("Authentication error"));
-  }
-});
-
-
-
-let onlineUsers = {};
-
-usp.on("connection", async function (socket) {
-  // console.log("User Connected:", socket);
-  console.log("User Connected:", socket.userId);
-
-  // Add the user to the online users list
-  onlineUsers[socket.userId] = { userId: socket.userId, userName: socket.userName };
-
-  // Broadcast the updated online users list to all clients in the namespace
-  usp.emit("updateUserList", Object.values(onlineUsers));
-
-  socket.on("disconnect", async function () {
-    console.log("User Disconnected:", socket.userId);
-    // Remove the user from the online users list
-    delete onlineUsers[socket.userId];
-    
-    // Broadcast the updated online users list to all clients in the namespace
-    usp.emit("updateUserList", Object.values(onlineUsers));
+  const ChatMessageSchema = new mongoose.Schema({
+    meetingId: { type: String, required: true },
+    sender: {
+      id: { type: String, required: true },
+      name: { type: String, required: true },
+      role: { type: String, required: true }
+    },
+    message: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now }
   });
 
-  // Chat implementation
-  socket.on("newChat", function (data) {
-    data.sender_id = socket.userId; // Ensure that the sender_id is the connected user
-    console.log("New chat message:", data);
-    socket.broadcast.emit("loadNewChat", data);
-  });
-
-  // Load old chats
-  socket.on("existChat", async function (data) {
-    const chats = await Chat.find({
-      $or: [
-        { sender_id: data.sender_id, receiver_id: data.receiver_id },
-        { sender_id: data.receiver_id, receiver_id: data.sender_id },
-      ],
-    });
-
-    // Emit chats to frontend
-    socket.emit("loadChats", { chats: chats });
-  });
-});
-
-
+  const ChatMessage = mongoose.model('ChatMessage', ChatMessageSchema);
 
 
 // SOCKET FOR PARTICIPANT JOIN
@@ -131,57 +73,135 @@ usp.on("connection", async function (socket) {
 // Create a new namespace for participants
 const participantNamespace = io.of("/participant-namespace");
 
-let waitingRoom = {};
+let waitingRoom = [];
+let isMeetingStarted = false;
+let meetingId;
+let activeParticipants = [];
 
-// Participant Namespace Connection
 participantNamespace.on("connection", (socket) => {
   console.log("Participant Connected:", socket.id);
 
-  // Handle participant joining the meeting
-  socket.on("joinMeeting", (participant) => {
-    console.log("Participant Joined:", participant);
-    // Add the participant to the waiting room with socket.id as the key
-    waitingRoom[socket.id] = { ...participant, socketId: socket.id };
+  socket.on("joinMeeting", (user) => {
+    console.log('user for joining meeting', user)
+    socket.join(user.meetingId);
+    if (user.role === "Participant") {
+      const participantData = { ...user, socketId: socket.id };
+      waitingRoom.push(participantData);
 
-    console.log('waiting room line 146', waitingRoom);
+      
+      if (isMeetingStarted) {
+        participantNamespace.emit("newParticipantWaiting", participantData);
+        console.log('New participant waiting:', participantData);
+      }
+    } else {
+      // For non-participants (Moderator, Observer, Admin)
+      activeParticipants.push({ ...user, socketId: socket.id });
+      participantNamespace.emit("userJoined", { ...user, socketId: socket.id });
+      
+      console.log('activeParticipant',activeParticipants)
 
-    // Notify all moderators about the updated waiting room
-    participantNamespace.emit("waitingRoomUpdate", Object.values(waitingRoom));
-  });
-
-  // Handle admitting a participant
-  socket.on("admitParticipant", (participantSocketId) => {
-    console.log("admitParticipant id", participantSocketId);
-    const participant = waitingRoom[participantSocketId];
-    console.log("admitParticipant line 155", participant);
-    if (participant) {
-      // Remove participant from the waiting room
-      delete waitingRoom[participantSocketId];
-
-      // Notify all clients that the participant has joined the main meeting
-      participantNamespace.emit("participantAdmitted", participant);
-
-      // Notify the updated waiting room list to all moderators
-      participantNamespace.emit("waitingRoomUpdate", Object.values(waitingRoom));
+      participantNamespace.emit("activeParticipantsUpdated", activeParticipants);
+    
     }
   });
 
-// Handle meeting start event from moderator
-socket.on("startMeeting", () => {
-  console.log("Meeting has started");
-  participantNamespace.emit("meetingStarted"); // Broadcast to all observers
-});
+ 
+  // socket.on("startMeeting", ({ meetingId }) => {
+  //   isMeetingStarted = true;
+  //   console.log(`Meeting started for ID: ${meetingId}. Current waiting room:`, waitingRoom);
+  //   meetingId = meetingId;
+  //   participantNamespace.emit("meetingStarted", waitingRoom);
+  // });
 
-  // Handle participant disconnection
-  socket.on("disconnect", () => {
-    console.log("Participant Disconnected:", socket.id);
-    // Remove participant from waiting room if they disconnect
-    delete waitingRoom[socket.id];
-
-    // Notify the updated waiting room list to all moderators
-    participantNamespace.emit("waitingRoomUpdate", Object.values(waitingRoom));
+  socket.on("startMeeting", ({ meetingId }) => {
+    isMeetingStarted = true;
+    socket.join(meetingId);
+    console.log(`Meeting started for ID: ${meetingId}. Current waiting room:`, waitingRoom);
+    participantNamespace.to(meetingId).emit("meetingStarted", waitingRoom);
   });
-});
+  
+
+  
+  socket.on("sendMessage", async (data) => {
+    const { meetingId, sender, message } = data;
+    console.log('send message data', data)
+    const newMessage = new ChatMessage({
+      meetingId,
+      sender,
+      message
+    });
+
+    try {
+      await newMessage.save();
+      participantNamespace.to(meetingId).emit("newMessage", newMessage);
+      console.log('sending new message to the frontend', newMessage)
+    } catch (error) {
+      console.error("Error saving message:", error);
+    }
+  });
+
+  socket.on("getChatHistory", async (meetingId) => {
+    try {
+      const chatHistory = await ChatMessage.find({ meetingId }).sort('timestamp');
+      console.log(' chat history to send at front end', chatHistory)
+      socket.emit("chatHistory", chatHistory);
+    } catch (error) {
+      console.error("Error fetching chat history:", error);
+    }
+  });
+
+  socket.on("admitParticipant", (socketId) => {
+    console.log('Attempting to admit participant with socketId:', socketId);
+    console.log('Waiting room before participant admit:', waitingRoom);
+   
+    const participant = waitingRoom.find(p => p.socketId === socketId);
+    if (participant) {
+      waitingRoom = waitingRoom.filter(p => p.socketId !== socketId);
+
+      activeParticipants.push(participant);
+      
+      console.log('Participant admitted:', participant);
+
+       
+      participantNamespace.emit("participantAdmitted", participant, isMeetingStarted);
+
+      participantNamespace.emit("activeParticipantsUpdated", activeParticipants);
+
+      console.log('activeParticipant',activeParticipants)
+   
+    }else {
+      console.log('Participant not found in waiting room');
+    }
+  });
+  socket.on("leaveMeeting", (user) => {
+    console.log('User leaving meeting:', user);
+
+    activeParticipants = activeParticipants.filter(p => p.socketId !== socket.id);
+    
+    participantNamespace.emit("participantLeft", socket.id);
+    
+    console.log('Active participants after leave:', activeParticipants);
+
+    participantNamespace.emit("activeParticipantsUpdated", activeParticipants);
+ 
+
+  });
+
+  socket.on("disconnect", () => {
+    console.log('User disconnected:', socket.id);
+
+    activeParticipants = activeParticipants.filter(p => p.socketId !== socket.id);
+
+    participantNamespace.emit("participantLeft", socket.id);
+
+    console.log('Active participants after disconnect:', activeParticipants);
+
+    participantNamespace.emit("activeParticipantsUpdated", activeParticipants);
+
+
+  });
+
+});;
 
 
 
