@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoom-like App</title>
+    <style>
+        #create-breakout {
+            background-color: lightgreen;
+        }
+
+        #end-breakout {
+            background-color: lightorange;
+        }
+
+        #end-meeting {
+            background-color: red;
+        }
+
+        #remoteVideos video {
+            width: 150px;
+            height: 100px;
+            margin: 5px;
+            border: 1px solid black;
+        }
+
+        #remoteVideos div {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 id="room-header">Meeting Room</h1>
+    <div id="room-selection">
+        <input type="text" id="roomId" placeholder="Enter Room ID">
+        <input type="text" id="name" placeholder="Enter Your Name">
+        <button onclick="joinRoom()">Join Room</button>
+    </div>
+    <div id="video-call" style="display: none;">
+        <video id="localVideo" autoplay muted></video>
+        <div id="remoteVideos"></div>
+        <button id="create-breakout" onclick="createBreakoutRoom()">Create Breakout Room</button>
+        <div id="breakout-rooms"></div>
+        <button id="end-breakout" onclick="endBreakoutRoom()">End Breakout Room</button>
+        <button id="end-meeting" onclick="endMeeting()">End Meeting</button>
+        <ul id="participants"></ul>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>

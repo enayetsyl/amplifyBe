@@ -35,6 +35,7 @@ The Amplify Research team.`,
 
 // Controller function to handle create request
 const createModerator = async (req, res) => {
+  console.log("calling")
   const { firstName, lastName, email, project } = req.body;
 
   // Validate input data
@@ -89,7 +90,7 @@ const updateModerator = async (req, res) => {
       return res.status(404).send("Moderator not found.");
     }
 
-    await sendEmail(email);
+    await sendEmail(email); // Assuming sendEmail is a function to send an email notification
     res.status(200).send("Moderator updated and email sent successfully.");
   } catch (error) {
     console.error("Error updating moderator:", error);
@@ -97,10 +98,14 @@ const updateModerator = async (req, res) => {
   }
 };
 
+module.exports = { updateModerator };
+
+
 // Controller function to handle delete request
 const deleteModerator = async (req, res) => {
-  const { id } = req.params;
-
+ 
+  const  id  = req.query.id;
+console.log(id)
   try {
     const deletedModerator = await Moderator.findByIdAndDelete(id);
 

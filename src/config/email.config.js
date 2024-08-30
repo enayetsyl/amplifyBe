@@ -36,7 +36,7 @@ async function sendVerifyEmail(name, email, id) {
       to: email,
       subject: "for Verification mail",
       html: `<p>Hi ${name},</p>
-      <p>Please click here to <a href="http://localhost:3000/verify?id=${id}">verify your email</a>.</p>`,
+      <p>Please click here to <a href="http://localhost:3000/accountActivation?id=${id}">verify your email</a>.</p>`,
     };
     transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
