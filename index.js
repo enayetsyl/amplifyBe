@@ -23,6 +23,7 @@ const Chat = require("./src/api/models/chatModelMesage.js");
 // Import routes
 const userRoutes = require("./src/api/routes/userMessRoutes.js");
 const uploadFileRoutes = require("./src/api/routes/uploadFileRoute.js");
+const MeetUserRoutes = require("./src/api/routes/meetUserRoute.js");
 
 // Import other route files
 require("./src/api/routes/userRoute.js")(app);
@@ -60,6 +61,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Use the user routes
 app.use("/", userRoutes);
 app.use("/api", uploadFileRoutes);
+app.use('/api/meetings', MeetUserRoutes);
 
 // Socket.IO namespace
 const usp = io.of("/user-namespace"); // Creating our own namespace for communication
