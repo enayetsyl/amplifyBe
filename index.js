@@ -86,6 +86,7 @@ let waitingRoom = [];
 let isMeetingStarted = false;
 let meetingId;
 let activeParticipants = [];
+let observerList = []
 
 participantNamespace.on("connection", (socket) => {
   console.log("Participant Connected:", socket.id);
@@ -102,6 +103,8 @@ participantNamespace.on("connection", (socket) => {
         participantNamespace.emit("newParticipantWaiting", participantData);
         console.log('New participant waiting:', participantData);
       }
+    } else if (user.role === "Observer"){
+      participantNamespace.emit("observerJoined", (user));
     } else {
       // For non-participants (Moderator, Observer, Admin)
       activeParticipants.push({ ...user, socketId: socket.id });
