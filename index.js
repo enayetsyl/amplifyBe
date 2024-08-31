@@ -55,13 +55,22 @@ mongoose
 
 
   const ChatMessageSchema = new mongoose.Schema({
-    meetingId: { type: String, required: true },
-    sender: {
-      id: { type: String, required: true },
-      name: { type: String, required: true },
-      role: { type: String, required: true }
+    meetingId: {
+      type: String,
+      required: true
     },
-    message: { type: String, required: true },
+    senderName: {
+      type: String,
+      required: true
+    },
+    receiverName: {
+      type: String,
+      required: true
+    },
+    message: {
+      type: String,
+      required: true
+    },
     timestamp: { type: Date, default: Date.now }
   });
 
@@ -123,11 +132,13 @@ participantNamespace.on("connection", (socket) => {
 
   
   socket.on("sendMessage", async (data) => {
-    const { meetingId, sender, message } = data;
-    console.log('send message data', data)
+    const { meetingId, senderName,
+      receiverName, message } = data.message;
+    console.log('send message data', data.message)
     const newMessage = new ChatMessage({
       meetingId,
-      sender,
+      senderName,
+      receiverName,
       message
     });
 

@@ -39,7 +39,7 @@ const getAllMeetings = async (req, res) => {
       .skip(skip)
       .limit(limit);
       
-    console.log('meetings', meetings)
+    // console.log('meetings', meetings)
     // Count total documents matching the projectId
     const totalDocuments = await Meeting.countDocuments({ projectId: req.params.projectId  });
 
