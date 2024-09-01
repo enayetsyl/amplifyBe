@@ -120,7 +120,6 @@ const signin = async (req, res) => {
 
     var token = jwt.sign({ id: user._id, name: user.firstName, role: user.role }, process.env.JWT_SECRET, { expiresIn: 86400 }); // 24 hours
 
-console.log('token sent', token)
     await userModel.findByIdAndUpdate(user._id, { token: token });
 
     console.log('login user', user)

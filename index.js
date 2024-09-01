@@ -13,7 +13,7 @@ const { Timestamp } = require('mongodb');
 
 const io = require("socket.io")(http, {
   cors: {
-    origin: "*", 
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
@@ -54,27 +54,27 @@ mongoose
   .catch((error) => console.log("Database connection error:", error));
 
 
-  const ChatMessageSchema = new mongoose.Schema({
-    meetingId: {
-      type: String,
-      required: true
-    },
-    senderName: {
-      type: String,
-      required: true
-    },
-    receiverName: {
-      type: String,
-      required: true
-    },
-    message: {
-      type: String,
-      required: true
-    },
-    timestamp: { type: Date, default: Date.now }
-  });
+const ChatMessageSchema = new mongoose.Schema({
+  meetingId: {
+    type: String,
+    required: true
+  },
+  senderName: {
+    type: String,
+    required: true
+  },
+  receiverName: {
+    type: String,
+    required: true
+  },
+  message: {
+    type: String,
+    required: true
+  },
+  timestamp: { type: Date, default: Date.now }
+});
 
-  const ChatMessage = mongoose.model('ChatMessage', ChatMessageSchema);
+const ChatMessage = mongoose.model('ChatMessage', ChatMessageSchema);
 
 
 // SOCKET FOR PARTICIPANT JOIN
@@ -88,41 +88,96 @@ let meetingId;
 let activeParticipants = [];
 let observerList = []
 
+
+
 participantNamespace.on("connection", (socket) => {
   console.log("Participant Connected:", socket.id);
 
+  socket.on("moderatorJoinMeeting", (user) =>{
+   
+      const moderatorData = { ...user, socketId: socket.id };
+
+      meetingId = user.meetingId;
+      isMeetingStarted = true;
+
+      const isAlreadyActiveParticipant = activeParticipants.some(
+        (participant) => participant.socketId === socket.id
+      );
+
+      if (!isAlreadyActiveParticipant) {
+        activeParticipants.push(moderatorData);
+      }
+  
+      // Check if the observerList already contains this moderator
+      const isAlreadyObserver = observerList.some(
+        (observer) => observer.socketId === socket.id
+      );
+      if (!isAlreadyObserver) {
+        observerList.push(moderatorData);
+      }
+     
+      console.log('moderator observerList, activeParticipants waitingroom', observerList, activeParticipants, waitingRoom)
+
+      participantNamespace.emit("newParticipantWaiting", waitingRoom);
+     
+      participantNamespace.emit("moderatorJoined", observerList, activeParticipants);
+
+  })
+
   socket.on("joinMeeting", (user) => {
     socket.join(user.meetingId);
+    console.log('join meeting', user)
     if (user.role === "Participant") {
       const participantData = { ...user, socketId: socket.id };
       waitingRoom.push(participantData);
-
-      
+     
       if (isMeetingStarted) {
-        participantNamespace.emit("newParticipantWaiting", participantData);
+        // console.log('is meeting started', isMeetingStarted)
+        participantNamespace.emit("newParticipantWaiting", waitingRoom);
       }
-    } else if (user.role === "Observer"){
-      participantNamespace.emit("observerJoined", (user));
-    } else {
-      // For non-participants (Moderator, Observer, Admin)
-      activeParticipants.push({ ...user, socketId: socket.id });
-      participantNamespace.emit("userJoined", { ...user, socketId: socket.id });
-      
+    } else if (user.role === "Observer") {
 
-      participantNamespace.emit("activeParticipantsUpdated", activeParticipants);
-    
+      observerList.push({ ...user, socketId: socket.id });
+      participantNamespace.emit("observerJoined", observerList);
+
+    }  else if (user.role === "Admin") {
+      // For non-participants (Moderator, Observer, Admin)
+
+      observerList.push({ ...user, socketId: socket.id });
+
+      participantNamespace.emit("observerJoined", observerList);
+
+      console.log('observerList', observerList)
     }
   });
 
- 
+
   socket.on("startMeeting", ({ meetingId }) => {
     isMeetingStarted = true;
     socket.join(meetingId);
     participantNamespace.to(meetingId).emit("meetingStarted", waitingRoom);
   });
-  
 
-  
+  socket.on("admitParticipant", (socketId) => {
+
+    const participant = waitingRoom.find(p => p.socketId === socketId);
+    if (participant) {
+      waitingRoom = waitingRoom.filter(p => p.socketId !== socketId);
+
+      activeParticipants.push(participant);
+
+
+      console.log('is meeing started', isMeetingStarted)
+      participantNamespace.emit("participantAdmitted", activeParticipants, isMeetingStarted, waitingRoom);
+
+      participantNamespace.emit("activeParticipantsUpdated", activeParticipants);
+
+
+    } else {
+      console.log('Participant not found in waiting room');
+    }
+  });
+
   socket.on("sendMessage", async (data) => {
     const { meetingId, senderName,
       receiverName, message } = data.message;
@@ -151,42 +206,28 @@ participantNamespace.on("connection", (socket) => {
     }
   });
 
-  socket.on("admitParticipant", (socketId) => {
-       
-    const participant = waitingRoom.find(p => p.socketId === socketId);
-    if (participant) {
-      waitingRoom = waitingRoom.filter(p => p.socketId !== socketId);
 
-      activeParticipants.push(participant);
-      
-
-       
-      participantNamespace.emit("participantAdmitted", participant, isMeetingStarted);
-
-      participantNamespace.emit("activeParticipantsUpdated", activeParticipants);
-
-   
-    }else {
-      console.log('Participant not found in waiting room');
-    }
-  });
   socket.on("leaveMeeting", (user) => {
 
     activeParticipants = activeParticipants.filter(p => p.socketId !== socket.id);
-    
-    participantNamespace.emit("participantLeft", socket.id);
-    
+
+    // participantNamespace.emit
+    ("participantLeft", socket.id);
+    observerList = observerList.filter(o => o.socketId !== socket.id);
+    participantNamespace.emit("observerLeft", observerList);
 
     participantNamespace.emit("activeParticipantsUpdated", activeParticipants);
- 
+
 
   });
 
   socket.on("disconnect", () => {
 
     activeParticipants = activeParticipants.filter(p => p.socketId !== socket.id);
+    observerList = observerList.filter(o => o.socketId !== socket.id);
 
-    participantNamespace.emit("participantLeft", socket.id);
+    // participantNamespace.emit("participantLeft", socket.id);
+    participantNamespace.emit("observerLeft", observerList);
 
 
     participantNamespace.emit("activeParticipantsUpdated", activeParticipants);
