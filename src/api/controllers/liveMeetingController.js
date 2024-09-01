@@ -98,27 +98,23 @@ const joinMeetingObserver = async (req, res) => {
     // Check if the meeting exists in the Meeting collection
     const meeting = await Meeting.findById(meetingId);
     if (!meeting) {
-      console.log('1')
       return res.status(404).json({ message: "Meeting not found" });
     }
 
     // Check if the passcode matches
     if (meeting.meetingPasscode !== passcode) {
-      console.log('2')
       return res.status(401).json({ message: "Invalid passcode" });
     }
 
     // Find the corresponding LiveMeeting
     let liveMeeting = await LiveMeeting.findOne({ meetingId: meetingId });
     if (!liveMeeting) {
-      console.log('3')
       return res.status(404).json({ message: "Live meeting not found" });
     }
 
     // Check if the observer is already in the observerList
     const isInObserverList = liveMeeting.observerList.some(observer => observer.name === name);
     if (isInObserverList) {
-      console.log('4')
       return res.status(400).json({ message: "Observer already added to the meeting" });
     }
 
@@ -139,7 +135,107 @@ const joinMeetingObserver = async (req, res) => {
   }
 };
 
+const getWaitingList = async (req, res) => {
+  const { meetingId } = req.params;
+
+  try {
+    const liveMeeting = await LiveMeeting.findOne({ meetingId });
+
+    if (!liveMeeting) {
+      return res.status(404).json({ message: 'Live meeting not found' });
+    }
+
+    res.status(200).json({ waitingRoom: liveMeeting.waitingRoom });
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving waiting list', error: error.message });
+  }
+};
+
+const acceptFromWaitingRoom = async (req, res) => {
+  const { participant, meetingId } = req.body;
+  console.log(participant, meetingId);
+
+  try {
+    const liveMeeting = await LiveMeeting.findOne({ meetingId });
+
+    if (!liveMeeting) {
+      return res.status(404).json({ message: 'Live meeting not found' });
+    }
+
+    const participantIndex = liveMeeting.waitingRoom.findIndex(p => p.name === participant.name);
+
+    if (participantIndex === -1) {
+      return res.status(404).json({ message: 'Participant not found in waiting room' });
+    }
+
+    const [removedParticipant] = liveMeeting.waitingRoom.splice(participantIndex, 1);
+    
+    // Add a unique ID to the participant before adding to participantsList
+    const participantWithId = {
+      ...removedParticipant.toObject(),
+      id: uuidv4()
+    };
+
+    liveMeeting.participantsList.push(participantWithId);
+
+    await liveMeeting.save();
+
+    res.status(200).json({ message: 'Participant moved to participants list', updatedLiveMeeting: liveMeeting });
+  } catch (error) {
+    res.status(500).json({ message: 'Error accepting participant from waiting room', error: error.message });
+  }
+};
+
+
+const getParticipantList = async (req, res) => {
+  const { meetingId } = req.params;
+
+  try {
+    const liveMeeting = await LiveMeeting.findOne({ meetingId });
+
+    if (!liveMeeting) {
+      return res.status(404).json({ message: 'Live meeting not found' });
+    }
+
+    res.status(200).json({ participantsList: liveMeeting.participantsList });
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving participant list', error: error.message });
+  }
+};
+
+const getObserverList = async (req, res) => {
+  const { meetingId } = req.params;
+
+  try {
+    const liveMeeting = await LiveMeeting.findOne({ meetingId });
+
+    if (!liveMeeting) {
+      return res.status(404).json({ message: 'Live meeting not found' });
+    }
+
+    res.status(200).json({ observersList: liveMeeting.observerList });
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving observer list', error: error.message });
+  }
+};
+
+const getMeetingStatus = async (req, res) => {
+  const { meetingId } = req.params;
+  try {
+    const liveMeeting = await LiveMeeting.findOne({ meetingId });
+
+    if (!liveMeeting) {
+      return res.status(404).json({ message: 'Live meeting not found' });
+    }
+
+    res.status(200).json({ meetingStatus: liveMeeting.ongoing });
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving observer list', error: error.message });
+  }
+}
+
+
 
 module.exports = {
-  startMeeting, joinMeetingParticipant, joinMeetingObserver
+  startMeeting, joinMeetingParticipant, joinMeetingObserver, getWaitingList, acceptFromWaitingRoom, getParticipantList, getObserverList, getMeetingStatus
 }

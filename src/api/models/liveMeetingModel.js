@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-
 const liveMeetingSchema = new Schema({
   meetingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Meeting', required: true },
   waitingRoom: [{
@@ -25,10 +24,6 @@ const liveMeetingSchema = new Schema({
   participantChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
   observerChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
 });
-
-
-
-
 
 const LiveMeeting = mongoose.model('LiveMeeting', liveMeetingSchema);
 
