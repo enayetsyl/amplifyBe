@@ -92,7 +92,6 @@ participantNamespace.on("connection", (socket) => {
   console.log("Participant Connected:", socket.id);
 
   socket.on("joinMeeting", (user) => {
-    console.log('user for joining meeting', user)
     socket.join(user.meetingId);
     if (user.role === "Participant") {
       const participantData = { ...user, socketId: socket.id };
@@ -101,7 +100,6 @@ participantNamespace.on("connection", (socket) => {
       
       if (isMeetingStarted) {
         participantNamespace.emit("newParticipantWaiting", participantData);
-        console.log('New participant waiting:', participantData);
       }
     } else if (user.role === "Observer"){
       participantNamespace.emit("observerJoined", (user));
@@ -110,7 +108,6 @@ participantNamespace.on("connection", (socket) => {
       activeParticipants.push({ ...user, socketId: socket.id });
       participantNamespace.emit("userJoined", { ...user, socketId: socket.id });
       
-      console.log('activeParticipant',activeParticipants)
 
       participantNamespace.emit("activeParticipantsUpdated", activeParticipants);
     
@@ -118,17 +115,9 @@ participantNamespace.on("connection", (socket) => {
   });
 
  
-  // socket.on("startMeeting", ({ meetingId }) => {
-  //   isMeetingStarted = true;
-  //   console.log(`Meeting started for ID: ${meetingId}. Current waiting room:`, waitingRoom);
-  //   meetingId = meetingId;
-  //   participantNamespace.emit("meetingStarted", waitingRoom);
-  // });
-
   socket.on("startMeeting", ({ meetingId }) => {
     isMeetingStarted = true;
     socket.join(meetingId);
-    console.log(`Meeting started for ID: ${meetingId}. Current waiting room:`, waitingRoom);
     participantNamespace.to(meetingId).emit("meetingStarted", waitingRoom);
   });
   
@@ -137,7 +126,6 @@ participantNamespace.on("connection", (socket) => {
   socket.on("sendMessage", async (data) => {
     const { meetingId, senderName,
       receiverName, message } = data.message;
-    console.log('send message data', data.message)
     const newMessage = new ChatMessage({
       meetingId,
       senderName,
@@ -157,7 +145,6 @@ participantNamespace.on("connection", (socket) => {
   socket.on("getChatHistory", async (meetingId) => {
     try {
       const chatHistory = await ChatMessage.find({ meetingId }).sort('timestamp');
-      console.log(' chat history to send at front end', chatHistory)
       socket.emit("chatHistory", chatHistory);
     } catch (error) {
       console.error("Error fetching chat history:", error);
@@ -165,36 +152,30 @@ participantNamespace.on("connection", (socket) => {
   });
 
   socket.on("admitParticipant", (socketId) => {
-    console.log('Attempting to admit participant with socketId:', socketId);
-    console.log('Waiting room before participant admit:', waitingRoom);
-   
+       
     const participant = waitingRoom.find(p => p.socketId === socketId);
     if (participant) {
       waitingRoom = waitingRoom.filter(p => p.socketId !== socketId);
 
       activeParticipants.push(participant);
       
-      console.log('Participant admitted:', participant);
 
        
       participantNamespace.emit("participantAdmitted", participant, isMeetingStarted);
 
       participantNamespace.emit("activeParticipantsUpdated", activeParticipants);
 
-      console.log('activeParticipant',activeParticipants)
    
     }else {
       console.log('Participant not found in waiting room');
     }
   });
   socket.on("leaveMeeting", (user) => {
-    console.log('User leaving meeting:', user);
 
     activeParticipants = activeParticipants.filter(p => p.socketId !== socket.id);
     
     participantNamespace.emit("participantLeft", socket.id);
     
-    console.log('Active participants after leave:', activeParticipants);
 
     participantNamespace.emit("activeParticipantsUpdated", activeParticipants);
  
@@ -202,13 +183,11 @@ participantNamespace.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log('User disconnected:', socket.id);
 
     activeParticipants = activeParticipants.filter(p => p.socketId !== socket.id);
 
     participantNamespace.emit("participantLeft", socket.id);
 
-    console.log('Active participants after disconnect:', activeParticipants);
 
     participantNamespace.emit("activeParticipantsUpdated", activeParticipants);
 
