@@ -7,6 +7,11 @@ const liveMeetingSchema = new Schema({
     name: { type: String, required: true },
     role: { type: String, required: true }
   }],
+  moderator: {
+    name: { type: String, required: true },
+    id: { type: String, required: true },
+    role: { type: String, required: true }
+  },
   participantsList: [{
     name: { type: String, required: true },
     id: { type: String, required: true },

@@ -2,6 +2,8 @@ const Chat = require('../models/chatModel');
 const Meeting = require('../models/meetingModel');
 const LiveMeeting = require('../models/liveMeetingModel');
 const { v4: uuidv4 } = require('uuid');
+const ChatMessage = require('../models/chatModel');
+const { default: mongoose } = require('mongoose');
 
 const startMeeting = async (req, res) => {
   const { user, meetingId } = req.body;
@@ -29,10 +31,18 @@ const startMeeting = async (req, res) => {
       }
     }
 
+    // Generate a unique ID for the moderator
+    const moderatorId = uuidv4();
+
     // If no LiveMeeting document exists, create a new one
     const newLiveMeeting = new LiveMeeting({
       meetingId: meetingId,
-      ongoing: true
+      ongoing: true,
+      moderator: {
+        name: `${user.firstName} ${user.lastName}`,
+        id: moderatorId,
+        role: 'Moderator'
+      }
     });
 
     await newLiveMeeting.save();
@@ -197,7 +207,13 @@ const getParticipantList = async (req, res) => {
       return res.status(404).json({ message: 'Live meeting not found' });
     }
 
-    res.status(200).json({ participantsList: liveMeeting.participantsList });
+    // Create a new array with moderator and participants
+    const fullParticipantList = [
+      liveMeeting.moderator,
+      ...liveMeeting.participantsList
+    ];
+
+    res.status(200).json({ participantsList: fullParticipantList });
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving participant list', error: error.message });
   }
@@ -213,7 +229,13 @@ const getObserverList = async (req, res) => {
       return res.status(404).json({ message: 'Live meeting not found' });
     }
 
-    res.status(200).json({ observersList: liveMeeting.observerList });
+     // Create a new array with moderator and observers
+     const fullObserverList = [
+      liveMeeting.moderator,
+      ...liveMeeting.observerList
+    ];
+
+    res.status(200).json({ observersList: fullObserverList });
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving observer list', error: error.message });
   }
@@ -234,8 +256,178 @@ const getMeetingStatus = async (req, res) => {
   }
 }
 
+const participantSendMessage = async (req, res) => {
+  const { message, meetingId } = req.body;
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const liveMeeting = await LiveMeeting.findOne({ meetingId }).session(session);
+
+    if (!liveMeeting) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json({ message: 'Live meeting not found' });
+    }
+
+    // Create a new ChatMessage document
+    const newChatMessage = new ChatMessage({
+      senderName: message.senderName,
+      receiverName: message.receiverName,
+      message: message.message,
+    });
+
+    // Save the new chat message
+    const savedChatMessage = await newChatMessage.save({ session });
+
+    // Add the saved chat message's ID to the liveMeeting's participantChat array
+    liveMeeting.participantChat.push(savedChatMessage._id);
+    await liveMeeting.save({ session });
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    // Fetch the updated participantChat with populated messages
+    const updatedLiveMeeting = await LiveMeeting.findOne({ meetingId }).populate('participantChat');
+
+    res.status(200).json({
+      message: 'Chat message saved successfully',
+      participantMessages: updatedLiveMeeting.participantChat
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error("Error saving participant chat:", error);
+    res.status(500).json({ message: 'Error saving participant chat', error: error.message });
+  }
+}
+
+const getParticipantChat = async (req, res) => {
+  const { meetingId } = req.params;
+  try {
+    const liveMeeting = await LiveMeeting.findOne({ meetingId }).populate('participantChat');
+
+    if (!liveMeeting) {
+      return res.status(404).json({ message: 'Live meeting not found' });
+    }
+
+    if (!liveMeeting.participantChat || liveMeeting.participantChat.length === 0) {
+      return res.status(404).json({ message: 'No chat messages found for this meeting' });
+    }
+
+    res.status(200).json({
+      message: 'Participant chat retrieved successfully',
+      participantMessages: liveMeeting.participantChat
+    });
+
+  } catch (error) {
+    console.error("Error retrieving participant chat:", error);
+    res.status(500).json({ message: 'Error retrieving participant chat', error: error.message });
+  }
+}
+const getObserverChat = async (req, res) => {
+  const { meetingId } = req.params;
+  try {
+    const liveMeeting = await LiveMeeting.findOne({ meetingId }).populate('observerChat');
+
+    if (!liveMeeting) {
+      return res.status(404).json({ message: 'Live meeting not found' });
+    }
+
+    if (!liveMeeting.observerChat || liveMeeting.observerChat.length === 0) {
+      return res.status(404).json({ message: 'No chat messages found for this meeting' });
+    }
+    res.status(200).json({
+      message: 'Observers chat retrieved successfully',
+      observersMessages: liveMeeting.observerChat
+    });
+
+  } catch (error) {
+    console.error("Error retrieving observers chat:", error);
+    res.status(500).json({ message: 'Error retrieving observers chat', error: error.message });
+  }
+}
+
+const observerSendMessage = async (req, res) => {
+  const { message, meetingId } = req.body;
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const liveMeeting = await LiveMeeting.findOne({ meetingId }).session(session);
+
+    if (!liveMeeting) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json({ message: 'Live meeting not found' });
+    }
+
+    // Create a new ChatMessage document
+    const newChatMessage = new ChatMessage({
+      senderName: message.senderName,
+      receiverName: message.receiverName,
+      message: message.message,
+    });
+
+    // Save the new chat message
+    const savedChatMessage = await newChatMessage.save({ session });
+
+    // Add the saved chat message's ID to the liveMeeting's observerChat array
+
+    liveMeeting.observerChat.push(savedChatMessage._id);
+    await liveMeeting.save({ session });
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    // Fetch the updated observerChat with populated messages
+    const updatedLiveMeeting = await LiveMeeting.findOne({ meetingId }).populate('observerChat');
+
+    res.status(200).json({
+      message: 'Chat message saved successfully',
+      observersMessages: updatedLiveMeeting.observerChat
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error("Error saving participant chat:", error);
+    res.status(500).json({ message: 'Error saving participant chat', error: error.message });
+  }
+}
+
+const removeParticipantFromMeeting = async(req, res) => {
+  const { meetingId, name, role } = req.body;
+  try {
+    const liveMeeting = await LiveMeeting.findOne({ meetingId });
+
+    if (!liveMeeting) {
+      return res.status(404).json({ message: "Live meeting not found" });
+    }
+
+    if (role === 'Participant') {
+      liveMeeting.waitingRoom = liveMeeting.waitingRoom.filter(participant => participant.name !== name);
+      liveMeeting.participantsList = liveMeeting.participantsList.filter(participant => participant.name !== name);
+    } else if (role === 'Observer') {
+      liveMeeting.observerList = liveMeeting.observerList.filter(observer => observer.name !== name);
+    } else {
+      return res.status(400).json({ message: "Invalid role provided" });
+    }
+
+    await liveMeeting.save();
+
+    res.status(200).json({ message: "Participant removed successfully" });
+  } catch (error) {
+    console.error("Error removing participant:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+
 
 
 module.exports = {
-  startMeeting, joinMeetingParticipant, joinMeetingObserver, getWaitingList, acceptFromWaitingRoom, getParticipantList, getObserverList, getMeetingStatus
+  startMeeting, joinMeetingParticipant, joinMeetingObserver, getWaitingList, acceptFromWaitingRoom, getParticipantList, getObserverList, getMeetingStatus, participantSendMessage, getParticipantChat, getObserverChat, observerSendMessage, removeParticipantFromMeeting
 }

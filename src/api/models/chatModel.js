@@ -3,10 +3,6 @@ const mongoose = require('mongoose');
 
 
 const ChatMessageSchema = new mongoose.Schema({
-    meetingId: {
-      type: String,
-      required: true
-    },
     senderName: {
       type: String,
       required: true
