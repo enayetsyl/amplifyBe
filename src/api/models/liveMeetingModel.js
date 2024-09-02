@@ -26,6 +26,10 @@ const liveMeetingSchema = new Schema({
     type: Boolean,
     default: false
   },
+  webRtcRoomId: {
+    type: String,
+    default: null
+  },
   participantChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
   observerChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
 });
