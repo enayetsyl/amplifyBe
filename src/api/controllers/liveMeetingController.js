@@ -78,7 +78,7 @@ const startMeeting = async (req, res) => {
 
       if (response.data.roomId) {
         webRtcRoomId = response.data.roomId;
-        console.log('response', response.data.roomId)
+        console.log('create-room api response', response.data.roomId)
       } else {
         return res.status(400).json({ message: "Failed to create room" });
       }
