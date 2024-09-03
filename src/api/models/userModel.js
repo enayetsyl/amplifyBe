@@ -1,80 +1,109 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 const Schema = mongoose.Schema;
 
-// Modified User Schema
-const UserSchema = new Schema({
+
+const userSchema = new Schema({
   firstName: {
     type: String,
     required: true,
-    trim: true,
+    trim: true
   },
   lastName: {
     type: String,
     required: true,
-    trim: true,
+    trim: true
   },
   email: {
     type: String,
     required: true,
     unique: true,
     trim: true,
-    lowercase: true,
+    lowercase: true
   },
   password: {
     type: String,
-    required: function () {
-      return this.status !== "Pending";
-    },
+    required: true
   },
   role: {
     type: String,
-    enum: [
-      "PrimaryAdmin",
-      "InternalAdmin",
-      "ExternalAdmin",
-      "Moderator",
-      "Participant",
-      "Observer",
-    ],
-    required: true,
-  },
-  status: {
-    type: String,
-    enum: ["Pending", "Active", "Inactive"],
-    default: "Pending",
-  },
-  company: {
-    type: Schema.Types.ObjectId,
-    ref: "Company",
+    enum: ['Admin', 'Moderator', 'Observer'],
+    default: 'Admin'
   },
   isEmailVerified: {
     type: Boolean,
-    default: false,
+    default: false
   },
-  profilePicture: {
-    type: String,
-    default: "",
+  termsAccepted: {
+    type: Boolean,
+    required: true
   },
-  createdBy: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-  },
-  joinedOn: {
+  termsAcceptedTime: {
     type: Date,
+    default: Date.now
   },
   createdAt: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
   updatedAt: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
-  lastLoginAt: {
-    type: Date,
-  },
+
 });
 
-const User = mongoose.model("User", UserSchema);
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;
+
+
+// Earlier schema
+
+// const UserSchema = new Schema({
+//     firstName: {
+//         type: String,
+//         required: true,
+//         trim: true
+//     },
+//     lastName: {
+//         type: String,
+//         required: true,
+//         trim: true
+//     },
+//     email: {
+//         type: String,
+//         required: true,
+//         unique: true,
+//         trim: true,
+//         lowercase: true
+//     },
+//     password: {
+//         type: String,
+//         required: true
+//     },
+//     role: {
+//         type: String,
+//         default: "Admin"
+//     },
+//     isEmailVerified: {
+//         type: Boolean,
+//         default: false
+//     },
+//     termsAccepted: {
+//         type: Boolean,
+//         required: true
+//     },
+//     termsAcceptedTime: {
+//       type: Date,
+//       default: Date.now
+//     },
+//     createdAt: {
+//         type: Date,
+//         default: Date.now
+//     },
+//     updatedAt: {
+//         type: Date,
+//         default: Date.now
+//     }
+// });

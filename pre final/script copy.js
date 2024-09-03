@@ -13,7 +13,7 @@ const configuration = {
 };
 
 const connectSocket = () => {
-    socket = new WebSocket('wss://192.168.1.3:3000'); 
+    socket = new WebSocket('wss://192.168.1.3:3000'); // Replace with your server address
 
     socket.onmessage = (message) => {
         const data = JSON.parse(message.data);
@@ -148,7 +148,6 @@ const createPeerConnection = (participantName) => {
         return peerConnections[participantName];
     }
     console.log(`Creating peer connection to ${participantName}`);
-
     const pc = new RTCPeerConnection(configuration);
     peerConnections[participantName] = pc;
 
@@ -176,7 +175,6 @@ const createPeerConnection = (participantName) => {
 
         const container = document.getElementById(`container-${participantName}`) || document.createElement('div');
         container.id = `container-${participantName}`;
-
         if (!document.getElementById(`container-${participantName}`)) {
             container.appendChild(remoteVideo);
             const nameTag = document.createElement('div');
@@ -213,7 +211,6 @@ const createPeerConnection = (participantName) => {
 const handleOffer = (offer, sender) => {
     console.log(`Handling offer from ${sender}`);
     const pc = peerConnections[sender] || createPeerConnection(sender);
-
     pc.setRemoteDescription(new RTCSessionDescription(offer))
         .then(() => pc.createAnswer())
         .then(answer => pc.setLocalDescription(answer))
@@ -231,9 +228,7 @@ const handleOffer = (offer, sender) => {
 
 const handleAnswer = (answer, sender) => {
     console.log(`Handling answer from ${sender}`);
-
     const pc = peerConnections[sender];
-    
     if (pc) {
         pc.setRemoteDescription(new RTCSessionDescription(answer))
             .catch(e => console.error('Error handling answer:', e));
