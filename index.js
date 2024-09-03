@@ -31,7 +31,7 @@ const Chat = require("./src/api/models/chatModelMesage.js");
 
 // Import routes
 const userRoutes = require("./src/api/routes/userMessRoutes.js");
-const uploadFileRoutes = require("./src/api/routes/uploadFileRoute.js");
+// const uploadFileRoutes = require("./src/api/routes/uploadFileRoute.js");
 
 // Import other route files
 require("./src/api/routes/userRoute.js")(app);
