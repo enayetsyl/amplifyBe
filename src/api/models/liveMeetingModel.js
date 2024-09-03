@@ -30,6 +30,10 @@ const liveMeetingSchema = new Schema({
     type: String,
     default: null
   },
+  iframeUrl: {
+    type: String,
+    default: null
+  },
   participantChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
   observerChat: [{type: mongoose.Schema.Types.ObjectId, ref: 'ChatMessage'}],
 });

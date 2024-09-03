@@ -4,9 +4,7 @@ const path = require('path');
 
 // POST - Upload File
 exports.uploadFile = (req, res) => {
-  console.log("he")
   const file = req.file;
-console.log(file)
   if (!file) {
     return res.status(400).json({ message: 'No file uploaded' });
   }
@@ -25,10 +23,9 @@ console.log(file)
 
 // GET - List All Files
 exports.getFiles = (req, res) => {
-  console.log("get file route hit")
   File.find()
     .then((files) => {
-      console.log('Retrieved files:', files); // Debugging
+      
       res.status(200).json(files);
     })
     .catch((error) => {

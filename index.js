@@ -69,7 +69,7 @@ app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Use the user routes
-app.use("/api", uploadFileRoutes);
+// app.use("/api", uploadFileRoutes);
 
 
 // Start the server

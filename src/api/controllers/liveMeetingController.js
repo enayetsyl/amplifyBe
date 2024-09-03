@@ -62,7 +62,7 @@ const { default: axios } = require('axios');
 
 const startMeeting = async (req, res) => {
   const { user, meetingId } = req.body;
-
+  let iframeUrl = null;
   try {
     // Check if the meeting exists in the Meeting collection
     const existingMeeting = await Meeting.findById(meetingId);
@@ -86,23 +86,26 @@ const startMeeting = async (req, res) => {
       console.error("Error creating room:", error);
       return res.status(500).json({ message: "Error creating room", error: error.message });
     }
-
+    console.log('web rtc room id after initial room creation', webRtcRoomId)
     // Call the API to add the moderator as a user
+   
     try {
       const addUserResponse = await axios.post('https://serverzoom-mpbv.onrender.com/api/addUser', {
         roomId: webRtcRoomId,
         userName: `${user.firstName} ${user.lastName}`
       });
-
-      // console.log('Add user response for moderator', addUserResponse.data.message)
+      console.log('add user response', addUserResponse.data)
+      iframeUrl = addUserResponse.data.iframeUrl.replace(/^"|"$/g, '');
+      console.log("Moderator :", user.firstName, "joined to Room ID:", iframeUrl);
       if (addUserResponse.data.message !== "User added successfully") {
         return res.status(400).json({ message: "Failed to add user" });
       }
+
     } catch (error) {
       console.error("Error adding user:", error);
       return res.status(500).json({ message: "Error adding user", error: error.message });
     }
-
+    console.log('web rtc room id after adding moderator', webRtcRoomId)
     // Check if a LiveMeeting document already exists for this meeting
     let liveMeeting = await LiveMeeting.findOne({ meetingId: meetingId });
 
@@ -114,21 +117,24 @@ const startMeeting = async (req, res) => {
         // If the meeting exists but is not ongoing, set it to ongoing
         liveMeeting.ongoing = true;
         liveMeeting.webRtcRoomId = webRtcRoomId;
+        liveMeeting.iframeUrl = iframeUrl;
+        console.log('web rtc room id in the else block', webRtcRoomId)
         await liveMeeting.save();
         return res.status(200).json({ message: "Meeting resumed", liveMeeting });
       }
     }
 
-
+    console.log('iframeUrl:', iframeUrl);
 
     // Generate a unique ID for the moderator
     const moderatorId = uuidv4();
-
+    console.log('web rtc room id before save', webRtcRoomId)
     // If no LiveMeeting document exists, create a new one
     const newLiveMeeting = new LiveMeeting({
       meetingId: meetingId,
       ongoing: true,
       webRtcRoomId: webRtcRoomId,
+      iframeUrl: iframeUrl,
       moderator: {
         name: `${user.firstName} ${user.lastName}`,
         id: moderatorId,
@@ -306,7 +312,6 @@ const getWaitingList = async (req, res) => {
 
 const acceptFromWaitingRoom = async (req, res) => {
   const { participant, meetingId } = req.body;
-  console.log(participant, meetingId);
 
   // Start a session for the transaction
   const session = await mongoose.startSession();
@@ -330,21 +335,23 @@ const acceptFromWaitingRoom = async (req, res) => {
     }
 
     const [removedParticipant] = liveMeeting.waitingRoom.splice(participantIndex, 1);
-
+    let iframeUrl = null;
     // Add the participant to the WebRTC room before saving to the database
     try {
       const addUserResponse = await axios.post('https://serverzoom-mpbv.onrender.com/api/addUser', {
         roomId: liveMeeting.webRtcRoomId,
         userName: participant.name
       });
-
-      // console.log("Add participant response:", addUserResponse.data.message);
+      console.log('add user response', addUserResponse.data)
+      console.log("Participant :", participant.name, "joined to Room ID:", liveMeeting.webRtcRoomId);
       if (addUserResponse.data.message !== "User added successfully") {
         // If adding the user to the WebRTC room fails, rollback the transaction
         await session.abortTransaction();
         session.endSession();
         return res.status(400).json({ message: "Failed to add user to WebRTC room" });
       }
+      iframeUrl = addUserResponse.data.iframeUrl.replace(/^"|"$/g, '');;
+      console.log('iframeUrl after participant join:', iframeUrl);
     } catch (error) {
       console.error("Error adding user to WebRTC room:", error);
       await session.abortTransaction();
@@ -359,6 +366,7 @@ const acceptFromWaitingRoom = async (req, res) => {
     };
 
     liveMeeting.participantsList.push(participantWithId);
+    liveMeeting.iframeUrl = iframeUrl;
 
     // Save the changes to the database
     await liveMeeting.save({ session });
@@ -678,7 +686,28 @@ const getWebRtcMeetingId = async (req, res) => {
   }
 }
 
+const getIframeLink = async (req, res) => {
+  const { meetingId } = req.params;
+  // console.log('meetingId for iframe', meetingId);
+
+  try {
+    const liveMeeting = await LiveMeeting.findOne({ meetingId });
+
+    if (!liveMeeting) {
+      return res.status(404).json({ message: "Live meeting not found" });
+    }
+
+    if (liveMeeting.iframeUrl) {
+      res.status(200).json({ iframeLink: liveMeeting.iframeUrl });
+    } else {
+      res.status(404).json({ message: "WebRTC room ID not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+}
+
 
 module.exports = {
-  startMeeting, joinMeetingParticipant, joinMeetingObserver, getWaitingList, acceptFromWaitingRoom, getParticipantList, getObserverList, getMeetingStatus, participantSendMessage, getParticipantChat, getObserverChat, observerSendMessage, removeParticipantFromMeeting, getWebRtcMeetingId
+  startMeeting, joinMeetingParticipant, joinMeetingObserver, getWaitingList, acceptFromWaitingRoom, getParticipantList, getObserverList, getMeetingStatus, participantSendMessage, getParticipantChat, getObserverChat, observerSendMessage, removeParticipantFromMeeting, getWebRtcMeetingId, getIframeLink
 }
