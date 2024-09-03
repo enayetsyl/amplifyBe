@@ -20,7 +20,9 @@ const io = require("socket.io")(http, {
 
 
 dotenv.config();
-app.use(cors());
+app.use(cors({
+  origin: '*', 
+}));
 app.use(express.json());
 
 // Import models
@@ -53,6 +55,21 @@ mongoose
   })
   .then(() => console.log("Database Connected"))
   .catch((error) => console.log("Database connection error:", error));
+
+
+  // Middleware setup
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Use the user routes
+app.use("/api", uploadFileRoutes);
 
 
 // Start the server

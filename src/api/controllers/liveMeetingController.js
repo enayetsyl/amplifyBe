@@ -94,7 +94,7 @@ const startMeeting = async (req, res) => {
         userName: `${user.firstName} ${user.lastName}`
       });
 
-      console.log('addUserResponse', addUserResponse.data.message)
+      // console.log('Add user response for moderator', addUserResponse.data.message)
       if (addUserResponse.data.message !== "User added successfully") {
         return res.status(400).json({ message: "Failed to add user" });
       }
@@ -338,6 +338,7 @@ const acceptFromWaitingRoom = async (req, res) => {
         userName: participant.name
       });
 
+      // console.log("Add participant response:", addUserResponse.data.message);
       if (addUserResponse.data.message !== "User added successfully") {
         // If adding the user to the WebRTC room fails, rollback the transaction
         await session.abortTransaction();

@@ -1,4 +1,4 @@
-const File = require('../models/UploadFIleModel');
+const File = require('../models/UploadFileModel.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -25,10 +25,18 @@ console.log(file)
 
 // GET - List All Files
 exports.getFiles = (req, res) => {
+  console.log("get file route hit")
   File.find()
-    .then((files) => res.status(200).json(files))
-    .catch((error) => res.status(500).json({ message: 'Failed to retrieve files', error }));
+    .then((files) => {
+      console.log('Retrieved files:', files); // Debugging
+      res.status(200).json(files);
+    })
+    .catch((error) => {
+      console.error('Error retrieving files:', error); // Debugging
+      res.status(500).json({ message: 'Failed to retrieve files', error });
+    });
 };
+
 
 // DELETE - Delete a File
 
@@ -44,7 +52,7 @@ exports.deleteFile = (req, res) => {
       }
 
       // Debugging: Check the path before deleting
-      const filePath = path.resolve(__dirname, '..', '..','..', 'uploads', deletedFile.filename);
+      const filePath = path.resolve(__dirname, '..', 'uploads', deletedFile.filename);
       console.log('Deleting file at:', filePath);
 
       // Check if file exists
