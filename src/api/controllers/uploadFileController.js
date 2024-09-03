@@ -1,6 +1,7 @@
 const File = require('../models/UploadFIleModel');
 const fs = require('fs');
 const path = require('path');
+const UploadFIleModel = require('../models/UploadFIleModel');
 
 // POST - Upload File
 exports.uploadFile = (req, res) => {
@@ -65,3 +66,5 @@ exports.deleteFile = (req, res) => {
     })
     .catch((error) => res.status(500).json({ message: 'Failed to delete file', error }));
 };
+
+
