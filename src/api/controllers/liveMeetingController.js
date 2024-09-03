@@ -221,19 +221,19 @@ const joinMeetingObserver = async (req, res) => {
     }
 
     // Call the API to add the observer as a user
-    try {
-      const addUserResponse = await axios.post('https://serverzoom-mpbv.onrender.com/api/addUser', {
-        roomId: liveMeeting.webRtcRoomId,
-        userName: name
-      });
+    // try {
+    //   const addUserResponse = await axios.post('https://serverzoom-mpbv.onrender.com/api/addUser', {
+    //     roomId: liveMeeting.webRtcRoomId,
+    //     userName: name
+    //   });
 
-      if (addUserResponse.data.message !== "User added successfully") {
-        return res.status(400).json({ message: "Failed to add user" });
-      }
-    } catch (error) {
-      console.error("Error adding user:", error);
-      return res.status(500).json({ message: "Error adding user", error: error.message });
-    }
+    //   if (addUserResponse.data.message !== "User added successfully") {
+    //     return res.status(400).json({ message: "Failed to add user" });
+    //   }
+    // } catch (error) {
+    //   console.error("Error adding user:", error);
+    //   return res.status(500).json({ message: "Error adding user", error: error.message });
+    // }
 
     const observerId = uuidv4();
 
@@ -635,12 +635,12 @@ const removeParticipantFromMeeting = async (req, res) => {
     } else if (role === 'Observer') {
       liveMeeting.observerList = liveMeeting.observerList.filter(observer => observer.name !== name);
 
-      const response = await axios.post('https://serverzoom-mpbv.onrender.com/api/removeUser', {
-        roomId: liveMeeting.webRtcRoomId,
-        userName: name
-      });
+      // const response = await axios.post('https://serverzoom-mpbv.onrender.com/api/removeUser', {
+      //   roomId: liveMeeting.webRtcRoomId,
+      //   userName: name
+      // });
 
-      console.log('observer remove response', response.data);
+      // console.log('observer remove response', response.data);
 
     } else {
       return res.status(400).json({ message: "Invalid role provided" });
