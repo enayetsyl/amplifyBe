@@ -3,6 +3,8 @@ const app = express();
 const cors = require("cors");
 require("dotenv").config();
 require("./src/config/db.config.js");
+const session = require("express-session");
+const mongoose = require("mongoose");
 
 // Middleware
 app.use(cors({ origin: "*" }));
@@ -24,6 +26,12 @@ require("./src/api/routes/moderatorInvitationRoute.js")(app);//done
 require("./src/api/routes/breakoutroomRoutes.js")(app);//done -- 1api pending
 require("./src/api/routes/videoRoute.js")(app);//pending UI--Dependency WebRTC
 require("./src/api/routes/companyRoute.js")(app);//pending UI--not Inititiate
+
+
+
+const uploadFileRoutes = require("./src/api/routes/uploadFileRoute.js");
+app.use("/api", uploadFileRoutes);
+
 
 let port = process.env.PORT || 8008;
 app.listen(port, () => {
