@@ -14,6 +14,8 @@ module.exports = function(app) {
   app.get("/api/live-meeting/get-observer-chat/:meetingId", controller.getObserverChat);
   app.post("/api/live-meeting/send-message-to-observer", controller.observerSendMessage);
   app.put("/api/live-meeting/remove-participant-from-meeting", controller.removeParticipantFromMeeting);
+  app.put("/api/live-meeting/participant-left-from-meeting", controller.participantLeaveFromMeeting);
   app.get("/api/live-meeting/get-webrtc-meeting-id/:meetingId", controller.getWebRtcMeetingId);
   app.get("/api/live-meeting/get-iframe-link/:meetingId", controller.getIframeLink);
+  app.get("/api/live-meeting/get-removed-participants-list/:meetingId", controller.getRemovedParticipantsList);
 }

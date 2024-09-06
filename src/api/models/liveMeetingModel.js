@@ -7,6 +7,10 @@ const liveMeetingSchema = new Schema({
     name: { type: String, required: true },
     role: { type: String, required: true }
   }],
+  removedParticipants: [{
+    name: { type: String, required: true },
+    role: { type: String, required: true }
+  }],
   moderator: {
     name: { type: String, required: true },
     id: { type: String, required: true },
@@ -15,8 +19,8 @@ const liveMeetingSchema = new Schema({
   participantsList: [{
     name: { type: String, required: true },
     id: { type: String, required: true },
-    role: { type: String, required: true }
-  }],
+    role: { type: String, required: true },
+    }],
   observerList: [{
     name: { type: String, required: true },
     id: { type: String, required: true },

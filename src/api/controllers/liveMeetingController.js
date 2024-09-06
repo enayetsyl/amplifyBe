@@ -74,7 +74,7 @@ const startMeeting = async (req, res) => {
     // Call the API to create a room
     let webRtcRoomId = null;
     try {
-      const response = await axios.post('https://serverzoom-mpbv.onrender.com/api/create-room');
+      const response = await axios.post('https://zoom.trainright.fit/api/create-room');
 
       if (response.data.roomId) {
         webRtcRoomId = response.data.roomId;
@@ -90,7 +90,7 @@ const startMeeting = async (req, res) => {
     // Call the API to add the moderator as a user
    
     try {
-      const addUserResponse = await axios.post('https://serverzoom-mpbv.onrender.com/api/addUser', {
+      const addUserResponse = await axios.post('https://zoom.trainright.fit/api/addUser', {
         roomId: webRtcRoomId,
         userName: `${user.firstName} ${user.lastName}`
       });
@@ -228,7 +228,7 @@ const joinMeetingObserver = async (req, res) => {
 
     // Call the API to add the observer as a user
     // try {
-    //   const addUserResponse = await axios.post('https://serverzoom-mpbv.onrender.com/api/addUser', {
+    //   const addUserResponse = await axios.post('https://zoom.trainright.fit/api/addUser', {
     //     roomId: liveMeeting.webRtcRoomId,
     //     userName: name
     //   });
@@ -338,11 +338,10 @@ const acceptFromWaitingRoom = async (req, res) => {
     let iframeUrl = null;
     // Add the participant to the WebRTC room before saving to the database
     try {
-      const addUserResponse = await axios.post('https://serverzoom-mpbv.onrender.com/api/addUser', {
+      const addUserResponse = await axios.post('https://zoom.trainright.fit/api/addUser', {
         roomId: liveMeeting.webRtcRoomId,
         userName: participant.name
       });
-      console.log('add user response', addUserResponse.data)
       console.log("Participant :", participant.name, "joined to Room ID:", liveMeeting.webRtcRoomId);
       if (addUserResponse.data.message !== "User added successfully") {
         // If adding the user to the WebRTC room fails, rollback the transaction
@@ -404,6 +403,26 @@ const getParticipantList = async (req, res) => {
     res.status(200).json({ participantsList: fullParticipantList });
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving participant list', error: error.message });
+  }
+};
+const getRemovedParticipantsList = async (req, res) => {
+  const { meetingId } = req.params;
+console.log('route hit for removed participants list');
+  try {
+    const liveMeeting = await LiveMeeting.findOne({ meetingId });
+
+    if (!liveMeeting) {
+      return res.status(404).json({ message: 'Live meeting not found' });
+    }
+
+    // Create a new array with moderator and participants
+    const removedParticipantsList = [
+            ...liveMeeting.removedParticipants
+    ];
+    console.log('removedParticipantsList:', removedParticipantsList);
+    res.status(200).json({ removedParticipantsList: removedParticipantsList });
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving removed participants list', error: error.message });
   }
 };
 
@@ -624,6 +643,58 @@ const removeParticipantFromMeeting = async (req, res) => {
       return res.status(404).json({ message: "Live meeting not found" });
     }
 
+    if (role === 'Participant') {
+      const initialParticipantsLength = liveMeeting.participantsList.length;
+      
+      // Remove the participant from participantsList
+      const participantToRemove = liveMeeting.participantsList.find(participant => participant.name === name);
+
+      liveMeeting.participantsList = liveMeeting.participantsList.filter(participant => participant.name !== name);
+
+       // Add the removed participant to removedParticipants list
+    liveMeeting.removedParticipants.push({
+      name: name,
+      role: role
+   });
+      // Check if the participant was in the participantsList and remove from WebRTC room
+      if (liveMeeting.participantsList.length < initialParticipantsLength && participantToRemove) {
+        // Remove participant from WebRTC room
+        const response = await axios.post('https://zoom.trainright.fit/api/removeUser', {
+          roomId: liveMeeting.webRtcRoomId,
+          userName: name
+        });
+        console.log('participant remove response', response.data);
+
+       
+   
+      }
+    } else {
+      return res.status(400).json({ message: "Invalid role provided" });
+    }
+
+
+    console.log('live meeting before remove participant', liveMeeting.removedParticipants);
+
+    await liveMeeting.save();
+
+    res.status(200).json({ message: "Participant removed successfully and added to removedParticipants list" });
+  } catch (error) {
+    console.error("Error removing participant:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+const participantLeaveFromMeeting = async (req, res) => {
+  const { meetingId, name, role } = req.body;
+  try {
+    const liveMeeting = await LiveMeeting.findOne({ meetingId });
+
+    if (!liveMeeting) {
+      return res.status(404).json({ message: "Live meeting not found" });
+    }
+
 
 
     if (role === 'Participant') {
@@ -635,7 +706,7 @@ const removeParticipantFromMeeting = async (req, res) => {
 
       // Check if the participant was in the participantsList and needs to be removed from WebRTC room
       if (liveMeeting.participantsList.length < initialParticipantsLength) {
-        const response = await axios.post('https://serverzoom-mpbv.onrender.com/api/removeUser', {
+        const response = await axios.post('https://zoom.trainright.fit/api/removeUser', {
           roomId: liveMeeting.webRtcRoomId,
           userName: name
         });
@@ -644,7 +715,7 @@ const removeParticipantFromMeeting = async (req, res) => {
     } else if (role === 'Observer') {
       liveMeeting.observerList = liveMeeting.observerList.filter(observer => observer.name !== name);
 
-      // const response = await axios.post('https://serverzoom-mpbv.onrender.com/api/removeUser', {
+      // const response = await axios.post('https://zoom.trainright.fit/api/removeUser', {
       //   roomId: liveMeeting.webRtcRoomId,
       //   userName: name
       // });
@@ -709,5 +780,5 @@ const getIframeLink = async (req, res) => {
 
 
 module.exports = {
-  startMeeting, joinMeetingParticipant, joinMeetingObserver, getWaitingList, acceptFromWaitingRoom, getParticipantList, getObserverList, getMeetingStatus, participantSendMessage, getParticipantChat, getObserverChat, observerSendMessage, removeParticipantFromMeeting, getWebRtcMeetingId, getIframeLink
+  startMeeting, joinMeetingParticipant, joinMeetingObserver, getWaitingList, acceptFromWaitingRoom, getParticipantList, getObserverList, getMeetingStatus, participantSendMessage, getParticipantChat, getObserverChat, observerSendMessage, removeParticipantFromMeeting, getWebRtcMeetingId, getIframeLink,participantLeaveFromMeeting, getRemovedParticipantsList
 }
