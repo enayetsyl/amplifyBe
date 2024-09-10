@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const Contact = require("../models/contactModel");
 const { validationResult } = require("express-validator");
+const User = require("../models/userModel");
 
 // Controller to create a new project
 const createContact = async (req, res) => {
@@ -14,6 +15,13 @@ const createContact = async (req, res) => {
   }
 
   try {
+    const user = await User.findById(createdBy);
+    if (!user || !user.isEmailVerified) {
+      return res.status(400).json({
+        message: 'Email needs to be verified before creating a contact.',
+      });
+    }
+
     const newContact = new Contact({
       firstName, lastName, email, companyName, roles, createdBy
     });
