@@ -249,7 +249,8 @@ const joinMeetingObserver = async (req, res) => {
 
     res.status(200).json({
       message: "Observer added to the meeting",
-      observer: { name, role }
+      observer: { name, role },
+      isStreaming: liveMeeting.isStreaming 
     });
 
   } catch (error) {
@@ -778,7 +779,54 @@ const getIframeLink = async (req, res) => {
   }
 }
 
+const startMeetingStreaming = async (req, res) => {
+  const { meetingId } = req.body;
+
+  try {
+    // Find the LiveMeeting by meetingId and update isStreaming to true
+    const updatedMeeting = await LiveMeeting.findOneAndUpdate(
+      { meetingId: meetingId }, // Find the document by meetingId
+      { isStreaming: true }, // Set isStreaming to true
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedMeeting) {
+      return res.status(404).json({ message: 'Meeting not found' });
+    }
+
+    console.log('Meeting updated:', updatedMeeting);
+
+    res.status(200).json({ message: 'Meeting streaming started successfully', updatedMeeting });
+  } catch (error) {
+    console.error('Error starting meeting streaming:', error);
+    res.status(500).json({ message: 'Error starting meeting streaming', error });
+  }
+};
+
+
+const getStreamingStatus = async (req, res) => {
+  const { meetingId } = req.params;
+  console.log('meetingId for streaming status', meetingId);
+  try {
+    // Find the live meeting by meetingId
+    const liveMeeting = await LiveMeeting.findOne({ meetingId: meetingId });
+
+    if (!liveMeeting) {
+      return res.status(404).json({ message: "Meeting not found" });
+    }
+
+    // Return the current streaming status
+    res.status(200).json({
+      meetingId: meetingId,
+      isStreaming: liveMeeting.isStreaming,
+    });
+  } catch (error) {
+    console.error("Error getting streaming status:", error);
+    res.status(500).json({ message: "Error retrieving streaming status", error });
+  }
+};
+
 
 module.exports = {
-  startMeeting, joinMeetingParticipant, joinMeetingObserver, getWaitingList, acceptFromWaitingRoom, getParticipantList, getObserverList, getMeetingStatus, participantSendMessage, getParticipantChat, getObserverChat, observerSendMessage, removeParticipantFromMeeting, getWebRtcMeetingId, getIframeLink,participantLeaveFromMeeting, getRemovedParticipantsList
+  startMeeting, joinMeetingParticipant, joinMeetingObserver, getWaitingList, acceptFromWaitingRoom, getParticipantList, getObserverList, getMeetingStatus, participantSendMessage, getParticipantChat, getObserverChat, observerSendMessage, removeParticipantFromMeeting, getWebRtcMeetingId, getIframeLink,participantLeaveFromMeeting, getRemovedParticipantsList, startMeetingStreaming, getStreamingStatus
 }

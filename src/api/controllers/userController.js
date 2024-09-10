@@ -136,6 +136,7 @@ const signin = async (req, res) => {
       accessToken: token,
     });
   } catch (error) {
+    console.log('error in login', error)
     return res.status(500).json({ message: error.message, status: 500 });
   }
 };

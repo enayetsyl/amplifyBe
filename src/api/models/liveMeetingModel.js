@@ -30,6 +30,10 @@ const liveMeetingSchema = new Schema({
     type: Boolean,
     default: false
   },
+  isStreaming: {
+    type: Boolean,
+    default: false
+  },
   webRtcRoomId: {
     type: String,
     default: null

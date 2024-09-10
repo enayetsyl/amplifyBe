@@ -18,4 +18,6 @@ module.exports = function(app) {
   app.get("/api/live-meeting/get-webrtc-meeting-id/:meetingId", controller.getWebRtcMeetingId);
   app.get("/api/live-meeting/get-iframe-link/:meetingId", controller.getIframeLink);
   app.get("/api/live-meeting/get-removed-participants-list/:meetingId", controller.getRemovedParticipantsList);
+  app.put("/api/live-meeting/start-streaming", controller.startMeetingStreaming);
+  app.get("/api/live-meeting/get-streaming-status/:meetingId", controller.getStreamingStatus);
 }
