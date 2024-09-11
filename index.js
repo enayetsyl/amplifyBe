@@ -1,9 +1,7 @@
 const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
-const session = require("express-session");
 const dotenv = require("dotenv");
-const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const { Timestamp } = require("mongodb");

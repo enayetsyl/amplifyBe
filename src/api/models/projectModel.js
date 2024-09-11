@@ -11,7 +11,7 @@ const projectSchema = new Schema({
   members: [
     {
       userId: { type: Schema.Types.ObjectId, ref: 'User' },
-      role: { type: String, enum: ['Admin', 'Moderator', 'Observer'] },
+      roles: { type: [String], enum: ['Admin', 'Moderator', 'Observer'] },
       email: {type: String}
     }
   ],
