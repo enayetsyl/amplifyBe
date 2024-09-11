@@ -3,9 +3,10 @@ const Project = require("../models/projectModel");
 const { validationResult } = require("express-validator");
 const mongoose = require('mongoose');
 const Meeting = require("../models/meetingModel");
+const User = require("../models/userModel");
 
 // Controller to create a new project
-const createProject = async (req, res) => { 
+const createProject = async (req, res) => {
   const session = await mongoose.startSession();
 
   try {
@@ -13,7 +14,17 @@ const createProject = async (req, res) => {
     session.startTransaction();
     const formData = req.body;
     console.log('form data', formData)
-  
+
+
+     // Step 0: Check if the user who is creating the project has a verified email
+     const user = await User.findById(formData.createdBy);
+     if (!user || !user.isEmailVerified) {
+       res.status(400).json({
+         message: 'Email needs to be verified before creating a project.',
+       });
+       return;
+     }
+
     // Step 1: Create the project
     const newProject = new Project({
       name: formData.name,
@@ -29,7 +40,7 @@ const createProject = async (req, res) => {
     const savedProject = await newProject.save({ session });
 
     // Step 2: Create the meetings associated with the project
-    
+
     const newMeeting = new Meeting({
       projectId: savedProject._id,
       title: formData.meeting.title,
@@ -45,12 +56,12 @@ const createProject = async (req, res) => {
     });
 
     await newMeeting.save({ session });
-    
+
     // Commit the transaction
-    
+
     await session.commitTransaction();
     session.endSession();
-console.log(savedProject, newMeeting)
+    console.log(savedProject, newMeeting)
     res.status(201).json({
       message: 'Project and meeting created successfully',
       projectId: savedProject._id,
@@ -69,13 +80,17 @@ console.log(savedProject, newMeeting)
 const getAllProjects = async (req, res) => {
   const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
   const { id } = req.params; // Get the user ID from the route parameters
-console.log('get all projects id', id)
+  console.log('get all projects id', id)
   try {
     // Find projects where createdBy matches the provided user ID or userId in the people array matches the user ID
+    const userData = await User.findById(id)
+    console.log('user data', userData)
+    const userEmail = userData.email;
+
     const projects = await Project.find({
       $or: [
         { createdBy: id },
-        { 'members.userId': id }
+        { 'members.email': userEmail }
       ]
     })
       .skip((page - 1) * limit) // Skip the appropriate number of documents
@@ -84,7 +99,7 @@ console.log('get all projects id', id)
     const totalDocuments = await Project.countDocuments({
       $or: [
         { createdBy: id },
-        { 'members.userId': id }
+        { 'members.email': userEmail }
       ]
     }); // Total number of documents matching the criteria
     const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
@@ -213,9 +228,9 @@ module.exports = {
 //   ongoing: formData.ongoing,
 //   enableBreakoutRoom: formData.enableBreakoutRoom,
 //   meetingPasscode: formData.meetingPasscode,
-//   status: 'Draft', 
-//   tags: formData.tags || [], 
-//   // role: formData.role || [] 
+//   status: 'Draft',
+//   tags: formData.tags || [],
+//   // role: formData.role || []
 // });
 
 // // Save the project to the database

@@ -25,6 +25,7 @@ const meetingSchema = new Schema({
     type: Boolean,
     default: false
   },
+  
   enableBreakoutRoom: {
     type: Boolean,
     default: false

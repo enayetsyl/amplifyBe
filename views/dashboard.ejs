@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/path/to/your/css/styles.css"> <!-- Optional: Include your CSS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Include jQuery -->
+    <script>
+        if (typeof jQuery === 'undefined') {
+            document.write('<script src="/path/to/local/jquery.min.js"><\/script>');
+        }
+    </script>
+    <script src="/socket.io/socket.io.js"></script> <!-- Include Socket.IO client -->
+</head>
+<body>
+    <%- include('layout/header.ejs') %>
+    <h2 class="mb-4"><h1>Hii, <%= user.name %></h1></h2>
+
+    <div class="row">
+        <div class="col-md-4">
+            <ul class="list-group">
+                <% if (users.length > 0) { %>
+                    <% for (let i = 0; i < users.length; i++) { %>
+                        <li class="list-group-item list-group-item-dark cursor-pointer user-list" data-id="<%= users[i]['_id'] %>">
+                            <img src="<%= 'http://127.0.0.1:3000/' + users[i].image %>" alt="" width="50px" height="50px">
+                            <%= users[i].name %>
+                            <% if(users[i]['is_online'] == 1) { %>
+                                <sup class="online-status" id="<%= users[i]['_id'] %>-status">Online</sup>
+                            <% } else { %>
+                                <sup class="offline-status" id="<%= users[i]['_id'] %>-status">Offline</sup>
+                            <% } %>
+                        </li>
+                    <% } %>
+                <% } %>
+            </ul>
+        </div>
+        <div class="col-md-8">
+            <h3 class="start-head">Click to start the Chat</h3>
+            <div class="chat-section" style="display:none;">
+                <div id="chat-container"></div>
+                <form action="" id="chat-form">
+                    <input type="text" name="message" placeholder="Enter Message" id="message" class="border" required>
+                    <input type="submit" value="Send Message" class="btn btn-primary">
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var sender_id = '<%= user._id %>';
+        var receiver_id;
+        var socket = io('/user-namespace', {
+            auth: {
+                token: '<%= user._id %>'
+            }
+        });
+
+        $(document).ready(function() {
+            $('.user-list').click(function() {
+                var userId = $(this).attr('data-id');
+                receiver_id = userId;
+                $('.start-head').hide();
+                $('.chat-section').show();
+                socket.emit('existChat',{sender_id:sender_id,receiver_id:receiver_id})
+            });
+
+            socket.on('connect', function() {
+                console.log('Connected to server');
+            });
+
+            socket.on('getOnlineUser', function(data) {
+                $('#'+data.user_id+'-status').text('Online').removeClass('offline-status').addClass('online-status');
+            });
+
+            socket.on('getOfflineUser', function(data) {
+                $('#'+data.user_id+'-status').text('Offline').removeClass('online-status').addClass('offline-status');
+            });
+
+            $('#chat-form').submit(function(event) {
+                event.preventDefault();
+                var message = $('#message').val();
+                fetch('/save-chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sender_id: sender_id,
+                        receiver_id: receiver_id,
+                        message: message
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        console.log(data.data.message);
+                        $('#message').val('');
+                        let chat = data.data.message;
+                        let html = `
+                        <div class='current-user-chat'>
+                            <h5>` + chat + `</h5>
+                        </div>`;
+                        $('#chat-container').append(html);
+                        socket.emit('newChat',data.data)
+
+                        scrollChat();
+                        
+                    } else {
+                        alert(data.msg);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+        socket.on('loadNewChat',function(data){
+            // this if condition is used because we want only that text will be shown which send to that particular person 
+            //most important
+           if(sender_id == data.receiver_id && receiver_id==data.sender_id){
+                let html = `
+                <div class='distance-user-chat'>
+                    <h5>` + data.message + `</h5>
+                </div>`;
+                $('#chat-container').append(html);
+           }
+           scrollChat();
+        });
+
+
+        //load old chats
+        socket.on('loadChats',function(data){
+            // so when someone is clicking on profile the chat box has to be refresh therefore
+            $('#chat-container').html('');
+            var chats=data.chats;
+            let html='';
+            for(let x=0; x<chats.length; x++){
+                let addClass='';
+                if(chats[x]['sender_id']==sender_id){
+                    addClass='current-user-chat';
+                }
+                else{
+                    addClass='distance-user-chat';
+                }
+                html +=`
+                    <div class='`+addClass+`'>
+                        <h5>`+chats[x]['message']+`</h5>
+                    </div>
+                `
+            }
+            $('#chat-container').append(html);
+            scrollChat();
+        })
+        // this function is for scroll down when new messages arrived
+        function scrollChat(){
+            $('#chat-container').animate({
+                scrollTop:$('#chat-container').offset().top+ $('#chat-container')[0].scrollHeight
+            },0);
+        }
+    </script>
+
+    <%- include('layout/footer.ejs') %>
+</body> 
+</html>

@@ -1,8 +1,6 @@
-const bcrypt = require("bcryptjs");
 const Project = require("../models/projectModel");
-const { validationResult } = require("express-validator");
-const mongoose = require('mongoose');
 const Meeting = require("../models/meetingModel");
+const Contact = require("../models/contactModel");
 
 // Controller to create a new project
 const createMeeting = async (req, res) => {
@@ -26,25 +24,24 @@ const createMeeting = async (req, res) => {
   }
 };
 
-// Adjust the path according to your project structure
+
+
 const getAllMeetings = async (req, res) => {
   try {
-    // Extract projectId from the request parameters
-    const { projectId } = req.params;
-
-    // Extract pagination parameters from the query string
+   
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
     // Find all meetings that match the projectId with pagination
-    const meetings = await Meeting.find({ projectId })
-      .populate('moderator', 'firstName lastName email')
+    const meetings = await Meeting.find({ projectId: req.params.projectId })
+    .populate('moderator')
       .skip(skip)
       .limit(limit);
-
+      
+    // console.log('meetings', meetings)
     // Count total documents matching the projectId
-    const totalDocuments = await Meeting.countDocuments({ projectId });
+    const totalDocuments = await Meeting.countDocuments({ projectId: req.params.projectId  });
 
     // Calculate total pages
     const totalPages = Math.ceil(totalDocuments / limit);
@@ -55,8 +52,6 @@ const getAllMeetings = async (req, res) => {
         message: 'No meetings found for this project',
       });
     }
-
-
 
     // Return the matched meetings with pagination info
     res.status(200).json({
@@ -74,12 +69,31 @@ const getAllMeetings = async (req, res) => {
   }
 };
 
-// DELETE route
+//Verify moderator meeting passcode
+const verifyModeratorMeetingPasscode = async (req, res) => {
+  const { meetingId, passcode } = req.body;
+  console.log(meetingId, passcode)
+  try {
+    const meeting = await Meeting.findById(meetingId);
+    console.log(meeting.meetingPasscode)
+    console.log(meeting.meetingPasscode === passcode)
+    if (!meeting) {
+      return res.status(404).json({ message: "Meeting not found" });
+    }
+
+    if (meeting.meetingPasscode === passcode) {
+      return res.status(200).json({ message: "Passcode is correct" });
+    } else {
+      return res.status(401).json({ message: "Invalid passcode" });
+    }
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
 
 module.exports = {
   createMeeting,
-  getAllMeetings,
-  // getMeetingById,
-  // updateMeeting,
-  // deleteMeeting,
+  getAllMeetings, verifyModeratorMeetingPasscode
+
 };
