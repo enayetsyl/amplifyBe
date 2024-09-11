@@ -16,14 +16,14 @@ const createProject = async (req, res) => {
     console.log('form data', formData)
 
 
-     // Step 0: Check if the user who is creating the project has a verified email
-     const user = await User.findById(formData.createdBy);
-     if (!user || !user.isEmailVerified) {
-       res.status(400).json({
-         message: 'Email needs to be verified before creating a project.',
-       });
-       return;
-     }
+    // Step 0: Check if the user who is creating the project has a verified email
+    const user = await User.findById(formData.createdBy);
+    if (!user || !user.isEmailVerified) {
+      res.status(400).json({
+        message: 'Email needs to be verified before creating a project.',
+      });
+      return;
+    }
 
     // Step 1: Create the project
     const newProject = new Project({
@@ -35,8 +35,9 @@ const createProject = async (req, res) => {
       createdBy: formData.createdBy,
       tags: formData.tags,
       members: formData.members,
+      status: formData.status,
     });
-
+    console.log('new project', newProject)
     const savedProject = await newProject.save({ session });
 
     // Step 2: Create the meetings associated with the project
@@ -80,11 +81,9 @@ const createProject = async (req, res) => {
 const getAllProjects = async (req, res) => {
   const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
   const { id } = req.params; // Get the user ID from the route parameters
-  console.log('get all projects id', id)
   try {
     // Find projects where createdBy matches the provided user ID or userId in the people array matches the user ID
     const userData = await User.findById(id)
-    console.log('user data', userData)
     const userEmail = userData.email;
 
     const projects = await Project.find({

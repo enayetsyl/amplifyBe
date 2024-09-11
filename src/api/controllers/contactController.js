@@ -6,7 +6,7 @@ const User = require("../models/userModel");
 // Controller to create a new project
 const createContact = async (req, res) => {
   const { firstName, lastName, email, companyName, roles, createdBy } = req.body;
-
+console.log('create contact route hit', req.body)
   // Validation to check if all required fields are present
   if (!firstName || !lastName || !email || !companyName || !roles || !createdBy) {
     return res.status(400).json({
@@ -62,11 +62,11 @@ const getAllContacts = async (req, res) => {
 const getContactById = async (req, res) => {
   const { id } = req.params;
   try {
-    const project = await Project.findById(id);
-    if (!project) {
+    const contact = await Contact.findById(id);
+    if (!contact) {
       return res.status(404).json({ message: "Project not found" });
     }
-    res.status(200).json(project);
+    res.status(200).json(contact);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -78,7 +78,7 @@ const updateContact = async (req, res) => {
   const {
     firstName, lastName, email, companyName, roles
   } = req.body;
-
+  console.log('update contact', req.body)
   try {
 
     const updatedContact = await Contact.findByIdAndUpdate(
@@ -116,7 +116,7 @@ const deleteContact = async (req, res) => {
 const getContactsByUserId = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(req.params)
+    console.log('get contact by id',req.params)
     if (!id) {
       return res.status(400).json({ message: 'createdBy ID is required' });
     }
