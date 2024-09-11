@@ -2,12 +2,13 @@
   "name": "zoom-like-app",
   "version": "1.0.0",
   "description": "A Zoom-like video calling app with breakout rooms using WebRTC and Node.js",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "dependencies": {
+    "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -25,6 +26,7 @@
     "nodemailer": "^6.9.14",
     "randomstring": "^1.3.0",
     "socket.io": "^4.7.5",
+    "uuid": "^10.0.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {

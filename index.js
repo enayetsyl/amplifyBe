@@ -6,16 +6,24 @@ const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const app = express();
 const http = require("http").createServer(app);
+const jwt = require('jsonwebtoken');
+const cors = require("cors");
+const { Timestamp } = require('mongodb');
+
+
 const io = require("socket.io")(http, {
   cors: {
-    origin: "*", // Allow all origins. You can specify your frontend URL instead of "*"
-    methods: ["GET", "POST"],
-  },
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
 });
-const cors = require("cors");
+
 
 dotenv.config();
-app.use(cors());
+app.use(cors({
+  origin: '*', 
+}));
+app.use(express.json());
 
 // Import models
 const User = require("./src/api/models/userModelMessage.js");
@@ -23,13 +31,15 @@ const Chat = require("./src/api/models/chatModelMesage.js");
 
 // Import routes
 const userRoutes = require("./src/api/routes/userMessRoutes.js");
-const uploadFileRoutes = require("./src/api/routes/uploadFileRoute.js");
-const MeetUserRoutes = require("./src/api/routes/MeetUserRoutes.js");
+// const uploadFileRoutes = require("./src/api/routes/uploadFileRoute.js");
 
 // Import other route files
 require("./src/api/routes/userRoute.js")(app);
 require("./src/api/routes/pollRoute.js")(app);
 require("./src/api/routes/projectRoute.js")(app);
+require("./src/api/routes/meetingRoute.js")(app);
+require("./src/api/routes/liveMeetingRoute.js")(app);
+require("./src/api/routes/contactRoute.js")(app);
 require("./src/api/routes/meetingLinkRoute.js")(app);
 require("./src/api/routes/addAdminRoute.js")(app);
 require("./src/api/routes/moderatorInvitationRoute.js")(app);
@@ -37,21 +47,26 @@ require("./src/api/routes/breakoutroomRoutes.js")(app);
 require("./src/api/routes/videoRoute.js")(app);
 require("./src/api/routes/companyRoute.js")(app);
 
-// Connect to MongoDB
+mongoose.set("strictQuery", false);
+
+// Mongoose connection options
+const options = {
+  serverSelectionTimeoutMS: 50000,  
+  socketTimeoutMS: 45000,           
+  connectTimeoutMS: 30000,         
+};
+
 mongoose
-  .connect(
-    "mongodb+srv://backroom:backroom12072014@backroom.obewdyx.mongodb.net/",
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
-  )
-  .then(() => console.log("Database Connected"))
-  .catch((error) => console.log("Database connection error:", error));
+  .connect(process.env.MONGO_URI, options)
+  .then(() => {
+    console.log("Connected to the database");
+  })
+  .catch((err) => {
+    console.error(`Error connecting to the database: ${err}`);
+  });
 
-// const server = http.createServer(app);
 
-// Middleware setup
+  // Middleware setup
 app.use(
   session({
     secret: "thisismysessionseceret",
@@ -63,9 +78,7 @@ app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Use the user routes
-app.use("/", userRoutes);
-app.use("/api", uploadFileRoutes);
-app.use("/meetuser", MeetUserRoutes);
+// app.use("/api", uploadFileRoutes);
 
 // Socket.IO namespace
 const usp = io.of("/user-namespace"); // Creating our own namespace for communication

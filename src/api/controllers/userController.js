@@ -103,6 +103,7 @@ const signup = async (req, res) => {
 
 const signin = async (req, res) => {
   try {
+    console.log('login route', req.body)
     const user = await userModel.findOne({ email: req.body.email });
     if (!user) {
       return res.status(404).json({ message: "User Not found.", status: 404 });
@@ -117,7 +118,7 @@ const signin = async (req, res) => {
       });
     }
 
-    var token = jwt.sign({ id: user._id }, config.secret, { expiresIn: 86400 }); // 24 hours
+    var token = jwt.sign({ id: user._id, name: user.firstName, role: user.role }, process.env.JWT_SECRET, { expiresIn: 86400 }); // 24 hours
 
     await userModel.findByIdAndUpdate(user._id, { token: token });
 
@@ -135,6 +136,7 @@ const signin = async (req, res) => {
       accessToken: token,
     });
   } catch (error) {
+    console.log('error in login', error)
     return res.status(500).json({ message: error.message, status: 500 });
   }
 };
