@@ -16,14 +16,14 @@ const createProject = async (req, res) => {
     console.log('form data', formData)
 
 
-     // Step 0: Check if the user who is creating the project has a verified email
-     const user = await User.findById(formData.createdBy);
-     if (!user || !user.isEmailVerified) {
-       res.status(400).json({
-         message: 'Email needs to be verified before creating a project.',
-       });
-       return;
-     }
+    // Step 0: Check if the user who is creating the project has a verified email
+    const user = await User.findById(formData.createdBy);
+    if (!user || !user.isEmailVerified) {
+      res.status(400).json({
+        message: 'Email needs to be verified before creating a project.',
+      });
+      return;
+    }
 
     // Step 1: Create the project
     const newProject = new Project({
@@ -37,7 +37,7 @@ const createProject = async (req, res) => {
       members: formData.members,
       status: formData.status,
     });
-console.log('new project', newProject)
+    console.log('new project', newProject)
     const savedProject = await newProject.save({ session });
 
     // Step 2: Create the meetings associated with the project
