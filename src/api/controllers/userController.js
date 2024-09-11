@@ -84,7 +84,6 @@ const signup = async (req, res) => {
     });
     // Save the new user
     await newUser.save();
-    console.log('new registered user',newUser)
 
     // Send a verification email
     sendVerifyEmail(firstName, email, newUser._id);
@@ -103,7 +102,6 @@ const signup = async (req, res) => {
 
 const signin = async (req, res) => {
   try {
-    console.log('login route', req.body)
     const user = await userModel.findOne({ email: req.body.email });
     if (!user) {
       return res.status(404).json({ message: "User Not found.", status: 404 });
@@ -122,7 +120,6 @@ const signin = async (req, res) => {
 
     await userModel.findByIdAndUpdate(user._id, { token: token });
 
-    console.log('login user', user)
 
     return res.status(200).json({
       _id: user._id,

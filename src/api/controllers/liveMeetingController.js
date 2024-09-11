@@ -62,6 +62,7 @@ const { default: axios } = require('axios');
 
 const startMeeting = async (req, res) => {
   const { user, meetingId } = req.body;
+  console.log('user in startMeeting', user, meetingId)
   let iframeUrl = null;
   try {
     // Check if the meeting exists in the Meeting collection

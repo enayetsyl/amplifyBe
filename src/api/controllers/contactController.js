@@ -6,7 +6,7 @@ const User = require("../models/userModel");
 // Controller to create a new project
 const createContact = async (req, res) => {
   const { firstName, lastName, email, companyName, roles, createdBy } = req.body;
-
+console.log('create contact route hit', req.body)
   // Validation to check if all required fields are present
   if (!firstName || !lastName || !email || !companyName || !roles || !createdBy) {
     return res.status(400).json({

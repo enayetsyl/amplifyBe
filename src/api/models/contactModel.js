@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const contactSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
-  email: { type: String, required: true, unique: true, match: /.+\@.+\..+/ },
+  email: { type: String, required: true, match: /.+\@.+\..+/ },
   companyName: { type: String },
   roles: [{ type: String, enum: ['Admin', 'Moderator', 'Observer'], required: true }],
   createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
