@@ -13,7 +13,6 @@ const createProject = async (req, res) => {
     // Extract formData from the request body
     session.startTransaction();
     const formData = req.body;
-    console.log('form data', formData)
 
 
     // Step 0: Check if the user who is creating the project has a verified email
@@ -184,7 +183,7 @@ const updateProject = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
+// DELETE route
 const deleteProject = async (req, res) => {
   console.log("f", req);
   const { id } = req.params; // Extract ID from request parameters
@@ -199,7 +198,45 @@ const deleteProject = async (req, res) => {
   }
 };
 
-// DELETE route
+// Project status change
+const projectStatusChange = async (req, res) => {
+  const { projectId } = req.params;
+  const { status } = req.body;
+
+  // Validate status to ensure it's one of the allowed values
+  const validStatuses = ['Draft', 'Active', 'Complete', 'Inactive', 'Closed'];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({
+      message: "Invalid status. Status must be one of 'Draft', 'Active', 'Complete', 'Inactive', or 'Closed'.",
+    });
+  }
+
+  try {
+    // Find the project by ID and update the status
+    const updatedProject = await Project.findByIdAndUpdate(
+      projectId,
+      { status, updatedAt: Date.now() },
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedProject) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    res.status(200).json({
+      message: 'Project status updated successfully',
+      project: updatedProject,
+    });
+  } catch (error) {
+    console.error('Error updating project status:', error);
+    res.status(500).json({
+      message: 'Failed to update project status',
+      error: error.message,
+    });
+  }
+};
+
+
 
 module.exports = {
   createProject,
@@ -207,6 +244,8 @@ module.exports = {
   getProjectById,
   updateProject,
   deleteProject,
+  projectStatusChange,
+
 };
 
 
