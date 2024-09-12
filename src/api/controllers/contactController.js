@@ -1,7 +1,9 @@
 const bcrypt = require("bcryptjs");
 const Contact = require("../models/contactModel");
+const Project = require("../models/projectModel");
 const { validationResult } = require("express-validator");
 const User = require("../models/userModel");
+const { default: mongoose } = require("mongoose");
 
 // Controller to create a new project
 const createContact = async (req, res) => {
@@ -138,8 +140,36 @@ const getContactsByUserId = async (req, res) => {
   }
 };
 
+// create contact from member tab
+const createContactForMemberTab = async (req, res) => {
+  const { userId, projectId } = req.params;
 
-// DELETE route
+  try {
+    // Fetch all contacts created by the user (userId)
+    const contacts = await Contact.find({ createdBy: userId });
+    
+    console.log('contacts', contacts)
+    // Fetch the project using projectId
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found." });
+    }
+    console.log('project', project)
+    // Extract all member user IDs from the project
+    const projectMemberIds = project.members.map(member => member.userId.toString());
+
+    // Filter out contacts that are already members of the project
+    const nonMemberContacts = contacts.filter(contact => !projectMemberIds.includes(contact._id.toString()));
+
+    // Return the filtered list of contacts to the frontend
+    res.status(200).json(nonMemberContacts);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 module.exports = {
   createContact,
@@ -147,5 +177,6 @@ module.exports = {
   getContactById,
   updateContact,
   deleteContact,
-  getContactsByUserId
+  getContactsByUserId,
+  createContactForMemberTab
 };

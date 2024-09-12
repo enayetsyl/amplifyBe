@@ -273,6 +273,29 @@ const updateGeneralProjectInfo = async (req, res) => {
   }
 };
 
+const addPeopleIntoProject = async (req, res) => {
+  const { projectId, people } = req.body;
+
+  try {
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    people.forEach((person) => {
+      project.members.push({
+        userId: person.personId,
+        roles: person.roles,
+        email: person.email,
+      });
+    });
+
+    await project.save();
+    res.status(200).json({ message: 'People added successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding people', error });
+  }
+}
 
 
 
@@ -283,7 +306,8 @@ module.exports = {
   updateProject,
   deleteProject,
   projectStatusChange,
-  updateGeneralProjectInfo
+  updateGeneralProjectInfo,
+  addPeopleIntoProject
 };
 
 
