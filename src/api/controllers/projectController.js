@@ -91,8 +91,9 @@ const getAllProjects = async (req, res) => {
         { 'members.email': userEmail }
       ]
     })
-      .skip((page - 1) * limit) // Skip the appropriate number of documents
-      .limit(parseInt(limit)); // Limit the number of documents
+    .populate('members.userId', 'firstName lastName addedDate lastUpdatedOn')
+      .skip((page - 1) * limit) 
+      .limit(parseInt(limit)); 
 
     const totalDocuments = await Project.countDocuments({
       $or: [

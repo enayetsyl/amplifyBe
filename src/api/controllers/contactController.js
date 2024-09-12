@@ -6,7 +6,7 @@ const User = require("../models/userModel");
 // Controller to create a new project
 const createContact = async (req, res) => {
   const { firstName, lastName, email, companyName, roles, createdBy } = req.body;
-console.log('create contact route hit', req.body)
+  console.log('create contact route hit', req.body)
   // Validation to check if all required fields are present
   if (!firstName || !lastName || !email || !companyName || !roles || !createdBy) {
     return res.status(400).json({
@@ -22,10 +22,12 @@ console.log('create contact route hit', req.body)
         message: 'Email needs to be verified before creating a contact.',
       });
     }
-const newContact = new Contact({
-  firstName, lastName, email, companyName, roles, createdBy
-});
-console.log('newContact', newContact)
+
+    const newContact = new Contact({
+      firstName, lastName, email, companyName, roles, createdBy
+    });
+    
+    console.log('newContact', newContact)
 
     const savedContact = await newContact.save();
     console.log('saved contact', savedContact)
@@ -43,11 +45,11 @@ const getAllContacts = async (req, res) => {
 
   try {
     const contacts = await Contact.find()
-      .skip((page - 1) * limit) // Skip the appropriate number of documents
-      .limit(parseInt(limit)); // Limit the number of documents
-    const totalDocuments = await Contact.countDocuments(); // Total number of documents in collection
+     .skip((page - 1) * limit) 
+      .limit(parseInt(limit)); 
+    const totalDocuments = await Contact.countDocuments(); 
     const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
-    
+
     res.status(200).json({
       page: parseInt(page),
       totalPages,
@@ -55,7 +57,7 @@ const getAllContacts = async (req, res) => {
       contacts,
     });
   } catch (error) {
-    
+
     res.status(500).json({ message: error.message });
   }
 };
@@ -118,13 +120,13 @@ const deleteContact = async (req, res) => {
 const getContactsByUserId = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('get contact by id',req.params)
+    console.log('get contact by id', req.params)
     if (!id) {
       return res.status(400).json({ message: 'createdBy ID is required' });
     }
 
-    const contacts = await Contact.find({createdBy:id });
-    
+    const contacts = await Contact.find({ createdBy: id });
+
     if (contacts.length === 0) {
       return res.status(404).json({ message: 'No contacts found for this user' });
     }
