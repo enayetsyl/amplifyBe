@@ -7,4 +7,5 @@ module.exports = function (app) {
   app.put("/api/update-project", controller.updateProject);
   app.delete("/api/delete/project/:id", controller.deleteProject);
   app.put("/api/change-project-status/:projectId", controller.projectStatusChange);
+  app.put("/api/update-general-project-info/:projectId", controller.updateGeneralProjectInfo);
 };

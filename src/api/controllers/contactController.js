@@ -16,17 +16,19 @@ console.log('create contact route hit', req.body)
 
   try {
     const user = await User.findById(createdBy);
+    console.log('user', user)
     if (!user || !user.isEmailVerified) {
       return res.status(400).json({
         message: 'Email needs to be verified before creating a contact.',
       });
     }
-
-    const newContact = new Contact({
-      firstName, lastName, email, companyName, roles, createdBy
-    });
+const newContact = new Contact({
+  firstName, lastName, email, companyName, roles, createdBy
+});
+console.log('newContact', newContact)
 
     const savedContact = await newContact.save();
+    console.log('saved contact', savedContact)
     res.status(201).json(savedContact);
   } catch (error) {
     console.log(error)
