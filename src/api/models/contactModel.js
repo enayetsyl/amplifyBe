@@ -9,7 +9,8 @@ const contactSchema = new mongoose.Schema({
   roles: [{ type: String, enum: ['Admin', 'Moderator', 'Observer'], required: true }],
   createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   addedDate: { type: Date, default: Date.now },
-  lastUpdatedOn: { type: Date, default: Date.now }
+  lastUpdatedOn: { type: Date, default: Date.now },
+  isUser: {type: Boolean, default: false}
 });
 
 contactSchema.pre('save', function (next) {

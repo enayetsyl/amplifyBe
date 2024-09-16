@@ -5,6 +5,7 @@ const randomstring = require("randomstring");
 const ExcelJS = require("exceljs");
 var jwt = require("jsonwebtoken");
 const { sendEmail, sendVerifyEmail } = require("../../config/email.config");
+const Contact = require("../models/contactModel");
 
 const validatePassword = (password) => {
   const errors = [];
@@ -94,6 +95,14 @@ const signup = async (req, res) => {
 
     // Send a verification email
     sendVerifyEmail(firstName, email, newUser._id);
+
+    const contacts = await Contact.find({ email });
+
+    if (contacts.length > 0) {
+      // Update all matching contacts to set isUser field to true
+      await Contact.updateMany({ email }, { $set: { isUser: true } });
+      console.log(`Updated ${contacts.length} contacts to set isUser to true.`);
+    }
 
     // Respond with success message
     return res.status(200).json({

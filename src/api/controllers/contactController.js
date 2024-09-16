@@ -25,8 +25,16 @@ const createContact = async (req, res) => {
       });
     }
 
+       // Search the user collection to match the email field
+       const matchingUser = await User.findOne({ email });
+    
+       let isUserFlag = false;
+       if (matchingUser) {
+         isUserFlag = true; // Set isUser to true if email matches a user
+       }
+
     const newContact = new Contact({
-      firstName, lastName, email, companyName, roles, createdBy
+      firstName, lastName, email, companyName, roles, createdBy, isUser: isUserFlag,
     });
     
     console.log('newContact', newContact)
