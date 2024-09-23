@@ -5,12 +5,14 @@ const { validationResult } = require("express-validator");
 // Controller to create a new poll
 const createPoll = async (req, res) => {
   // Check for validation errors
+  console.log('create pool route hit')
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { project, pollName, isActive, questions, choice } = req.body;
+  const { project, pollName, isActive, questions} = req.body;
+  console.log('req.body', req.body);
 
   try {
     // Check if the project exists
@@ -19,18 +21,19 @@ const createPoll = async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
+    console.log('existingProject', existingProject);
+
     // Create a new poll instance
     const newPoll = new Poll({
       project,
       pollName,
       isActive,
-      questions, // Now expecting an array of questions
-      choice,
+      questions,
     });
 
     // Save the poll to the database
     const savedPoll = await newPoll.save();
-
+console.log('savedPoll', savedPoll);
     res.status(201).json(savedPoll); // Respond with the saved poll
   } catch (error) {
     res.status(500).json({ message: error.message });

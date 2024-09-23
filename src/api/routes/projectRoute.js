@@ -9,4 +9,6 @@ module.exports = function (app) {
   app.put("/api/change-project-status/:projectId", controller.projectStatusChange);
   app.put("/api/update-general-project-info/:projectId", controller.updateGeneralProjectInfo);
   app.put("/api/app-people-to-project", controller.addPeopleIntoProject);
+  app.put("/api/edit-member-role/:projectId", controller.editMemberRole);
+  app.delete("/api/delete-member-from-project/:projectId/:memberId", controller.deleteMemberFromProject);
 };

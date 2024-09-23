@@ -36,10 +36,10 @@ const PollSchema = new Schema({
       ],
     },
   ],
-  choice: {
-    type: String,
-    default: "Single",
-  },
+  // choice: {
+  //   type: String,
+  //   default: "Single",
+  // },
   responses: [
     {
       user: {
