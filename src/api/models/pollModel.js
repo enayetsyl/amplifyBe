@@ -36,10 +36,10 @@ const PollSchema = new Schema({
       ],
     },
   ],
-  // choice: {
-  //   type: String,
-  //   default: "Single",
-  // },
+  createdBy: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+  },
   responses: [
     {
       user: {
@@ -49,7 +49,7 @@ const PollSchema = new Schema({
       answers: [String],
     },
   ],
-});
+}, { timestamps: true });
 
 const Poll = mongoose.model("Poll", PollSchema);
 

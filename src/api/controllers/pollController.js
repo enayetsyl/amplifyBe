@@ -11,7 +11,7 @@ const createPoll = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { project, pollName, isActive, questions} = req.body;
+  const { project, pollName, isActive, questions, createdBy} = req.body;
   console.log('req.body', req.body);
 
   try {
@@ -29,6 +29,7 @@ const createPoll = async (req, res) => {
       pollName,
       isActive,
       questions,
+      createdBy
     });
 
     // Save the poll to the database
@@ -43,13 +44,14 @@ console.log('savedPoll', savedPoll);
 
 // Controller to get all polls with pagination
 const getAllPolls = async (req, res) => {
-  console.log("h1")
+  console.log("req.params", req.params);
   const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
 
   try {
-    const polls = await Poll.find()
-      .skip((page - 1) * limit) // Skip the appropriate number of documents
-      .limit(parseInt(limit)); // Limit the number of documents
+    const polls = await Poll.find({project: req.params.projectId})
+      .skip((page - 1) * limit) 
+      .limit(parseInt(limit))
+      .populate('createdBy', 'firstName lastName email')
 
     const totalDocuments = await Poll.countDocuments(); // Total number of documents in collection
     const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
