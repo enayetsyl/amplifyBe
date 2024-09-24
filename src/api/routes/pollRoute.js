@@ -5,5 +5,6 @@ module.exports = function (app) {
   app.get("/api/get/poll-id/:id", controller.getPollById);
   app.get("/api/get-all/poll/:projectId", controller.getAllPolls);
   app.put("/api/update-poll/:id", controller.updatePoll);
+  app.patch("/api/change-active-status/:id", controller.changePollStatus);
   app.delete("/api/delete/poll/:id", controller.deletePoll);
 };

@@ -81,6 +81,32 @@ const getPollById = async (req, res) => {
   }
 };
 
+const changePollStatus = async(req, res) => {
+  const { id } = req.params; 
+  const { isActive } = req.body; 
+
+  try {
+    const poll = await Poll.findByIdAndUpdate(
+      id,
+      { isActive: isActive }, 
+      { new: true } 
+    );
+
+    if (!poll) {
+      return res.status(404).json({ message: "Poll not found" });
+    }
+
+    return res.status(200).json({
+      message: `Poll status changed to ${isActive ? "Active" : "Inactive"}`,
+      poll,
+    });
+  } catch (error) {
+    console.error("Error updating poll status:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+
 // Controller to update a poll
 const updatePoll = async (req, res) => {
   const { id } = req.params;
@@ -129,4 +155,5 @@ module.exports = {
   getPollById,
   updatePoll,
   deletePoll,
+  changePollStatus
 };
