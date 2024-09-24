@@ -110,18 +110,12 @@ const changePollStatus = async(req, res) => {
 // Controller to update a poll
 const updatePoll = async (req, res) => {
   const { id } = req.params;
-  const { pollName, isActive, questions, options, choice } = req.body;
+  const { pollName, isActive, questions } = req.body;
 
   try {
     const updatedPoll = await Poll.findByIdAndUpdate(
       id,
-      {
-        pollName,
-        isActive,
-        questions,
-        options,
-        choice,
-      },
+      { pollName, isActive, questions },
       { new: true }
     );
 
@@ -129,11 +123,13 @@ const updatePoll = async (req, res) => {
       return res.status(404).json({ message: "Poll not found" });
     }
 
+
     res.status(200).json(updatedPoll);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Controller to delete a poll
 const deletePoll = async (req, res) => {
