@@ -7,4 +7,9 @@ module.exports = function (app) {
   app.get("/api/get-all/contact/:id", controller.getContactsByUserId);
   app.put("/api/update-contact/:id", controller.updateContact);
   app.delete("/api/delete/contact/:id", controller.deleteContact);
+  // New search API for contacts by first name
+  app.get("/api/search/contact", controller.searchContactsByFirstName);
 };
+
+// for usage of this search Api
+// GET /api/search/contact?firstName=John
