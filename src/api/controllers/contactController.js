@@ -135,13 +135,51 @@ const getContactsByUserId = async (req, res) => {
 };
 
 
+//search API
+const searchContactsByFirstName = async (req, res) => {
+  const { firstName } = req.query;  // Get the firstName from query parameters
+  
+  // Check if firstName query parameter is provided
+  if (!firstName) {
+    return res.status(400).json({
+      message: "Please provide a firstName to search for."
+    });
+  }
+
+  try {
+    console.log(`Searching for contacts with firstName: ${firstName}`);
+    
+    // Search for contacts by matching the first name (case-insensitive)
+    const contacts = await Contact.find({ firstName: { $regex: firstName, $options: 'i' } });
+    
+    // Log the number of contacts found
+    console.log(`${contacts.length} contact(s) found for the search term: ${firstName}`);
+    
+    if (contacts.length === 0) {
+      return res.status(404).json({
+        message: `No contacts found with the first name: ${firstName}`
+      });
+    }
+    
+    res.status(200).json(contacts);
+  } catch (error) {
+    console.error(`Error during search: ${error.message}`);
+    res.status(500).json({
+      message: "Server error while searching for contacts. Please try again later."
+    });
+  }
+};
+
+
 // DELETE route
 
 module.exports = {
+  
   createContact,
   getAllContacts,
   getContactById,
   updateContact,
   deleteContact,
-  getContactsByUserId
+  getContactsByUserId,
+  searchContactsByFirstName
 };
