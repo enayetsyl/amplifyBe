@@ -15,6 +15,7 @@ const createUserRole = async (req, res) => {
   if (role === "Moderator") {
     newUserRole = {
       name,
+      role,
       CanScreenshare: true,
       CanManagerMuteForAll: true,
       CanManagerCameraForAll: true,
@@ -24,6 +25,7 @@ const createUserRole = async (req, res) => {
   } else if (role === "Participant") {
     newUserRole = {
       name,
+      role,
       CanScreenshare: true,
       CanManagerMuteForAll: false,
       CanManagerCameraForAll: false,
@@ -33,6 +35,7 @@ const createUserRole = async (req, res) => {
   } else if (role === "Observer") {
     newUserRole = {
       name,
+      role,
       CanScreenshare: false,
       CanManagerMuteForAll: false,
       CanManagerCameraForAll: false,
