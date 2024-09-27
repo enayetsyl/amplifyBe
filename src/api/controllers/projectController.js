@@ -34,8 +34,9 @@ const createProject = async (req, res) => {
       createdBy: formData.createdBy,
       tags: formData.tags,
       members: formData.members,
+      status: formData.status,
     });
-
+    console.log('new project', newProject)
     const savedProject = await newProject.save({ session });
 
     // Step 2: Create the meetings associated with the project
@@ -88,8 +89,9 @@ const getAllProjects = async (req, res) => {
     const projects = await Project.find({
       $or: [{ createdBy: id }, { "members.email": userEmail }],
     })
-      .skip((page - 1) * limit) // Skip the appropriate number of documents
-      .limit(parseInt(limit)); // Limit the number of documents
+    .populate('members.userId', 'firstName lastName addedDate lastUpdatedOn')
+      .skip((page - 1) * limit) 
+      .limit(parseInt(limit)); 
 
     const totalDocuments = await Project.countDocuments({
       $or: [{ createdBy: id }, { "members.email": userEmail }],
@@ -177,7 +179,7 @@ const updateProject = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
+// DELETE route
 const deleteProject = async (req, res) => {
   console.log("f", req);
   const { id } = req.params; // Extract ID from request parameters
@@ -241,6 +243,11 @@ module.exports = {
   getProjectById,
   updateProject,
   deleteProject,
+  // projectStatusChange,
+  // updateGeneralProjectInfo,
+  // addPeopleIntoProject,
+  // editMemberRole,
+  // deleteMemberFromProject
 };
 
 // const newProject = new Project({

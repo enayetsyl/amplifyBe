@@ -1,21 +1,24 @@
 const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
-const session = require("express-session");
 const dotenv = require("dotenv");
-const mongoose = require("mongoose");
-const app = express();
-const http = require("http").createServer(app);
 const jwt = require("jsonwebtoken");
+const session = require("express-session");
+
 const cors = require("cors");
 const { Timestamp } = require("mongodb");
+const { default: mongoose } = require("mongoose");
+const app = express();
+const http = require("http").createServer(app);
 
 const io = require("socket.io")(http, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
   },
-});
+    methods: ["GET", "POST"],
+  },
+);
 
 dotenv.config();
 app.use(

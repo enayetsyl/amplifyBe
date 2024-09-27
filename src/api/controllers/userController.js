@@ -5,6 +5,7 @@ const randomstring = require("randomstring");
 const ExcelJS = require("exceljs");
 var jwt = require("jsonwebtoken");
 const { sendEmail, sendVerifyEmail } = require("../../config/email.config");
+const Contact = require("../models/contactModel");
 
 const validatePassword = (password) => {
   const errors = [];
@@ -51,7 +52,9 @@ const signup = async (req, res) => {
 
     // Validate required fields
     if (!(firstName && lastName && email && password && terms !== undefined)) {
-      return res.status(400).json({ message: "All fields are required", status: 400 });
+      return res
+        .status(400)
+        .json({ message: "All fields are required", status: 400 });
     }
     // Validate email format
     const emailError = validateEmail(email);
@@ -61,12 +64,16 @@ const signup = async (req, res) => {
     // Validate password criteria
     const passwordErrors = validatePassword(password);
     if (passwordErrors) {
-      return res.status(400).json({ message: passwordErrors.join(" "), status: 400 });
+      return res
+        .status(400)
+        .json({ message: passwordErrors.join(" "), status: 400 });
     }
     // Check if the user already exists
     const userExist = await userModel.findOne({ email }).select("_id");
     if (userExist) {
-      return res.status(400).json({ message: "Email already in use", status: 400 });
+      return res
+        .status(400)
+        .json({ message: "Email already in use", status: 400 });
     }
     // Hash the password before saving it in the database
     const hashedPassword = bcrypt.hashSync(password, 8);
@@ -77,17 +84,25 @@ const signup = async (req, res) => {
       lastName,
       email,
       password: hashedPassword,
-      role: 'Admin',  // Default role set to 'Admin'
-      isEmailVerified: false,  // Default to false until email is verified
-      termsAccepted: terms,  // Capture acceptance of terms
-      termsAcceptedTime: new Date()  // Log the timestamp of the acceptance
+      role: "Admin", // Default role set to 'Admin'
+      isEmailVerified: false, // Default to false until email is verified
+      termsAccepted: terms, // Capture acceptance of terms
+      termsAcceptedTime: new Date(), // Log the timestamp of the acceptance
     });
     // Save the new user
     await newUser.save();
-    console.log('new registered user',newUser)
+    console.log("new registered user", newUser);
 
     // Send a verification email
     sendVerifyEmail(firstName, email, newUser._id);
+
+    const contacts = await Contact.find({ email });
+
+    if (contacts.length > 0) {
+      // Update all matching contacts to set isUser field to true
+      await Contact.updateMany({ email }, { $set: { isUser: true } });
+      console.log(`Updated ${contacts.length} contacts to set isUser to true.`);
+    }
 
     // Respond with success message
     return res.status(200).json({
@@ -100,11 +115,10 @@ const signup = async (req, res) => {
   }
 };
 
-
 const signin = async (req, res) => {
   try {
-    console.log('login route', req.body)
     const user = await userModel.findOne({ email: req.body.email });
+    console.log("login user", user);
     if (!user) {
       return res.status(404).json({ message: "User Not found.", status: 404 });
     }
@@ -118,11 +132,14 @@ const signin = async (req, res) => {
       });
     }
 
-    var token = jwt.sign({ id: user._id, name: user.firstName, role: user.role }, process.env.JWT_SECRET, { expiresIn: 86400 }); // 24 hours
+    var token = jwt.sign(
+      { id: user._id, name: user.firstName, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: 86400 }
+    ); // 24 hours
 
     await userModel.findByIdAndUpdate(user._id, { token: token });
 
-    console.log('login user', user)
 
     return res.status(200).json({
       _id: user._id,
@@ -136,7 +153,7 @@ const signin = async (req, res) => {
       accessToken: token,
     });
   } catch (error) {
-    console.log('error in login', error)
+    console.log("error in login", error);
     return res.status(500).json({ message: error.message, status: 500 });
   }
 };

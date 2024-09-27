@@ -1,12 +1,14 @@
 const bcrypt = require("bcryptjs");
 const Contact = require("../models/contactModel");
+const Project = require("../models/projectModel");
 const { validationResult } = require("express-validator");
 const User = require("../models/userModel");
+const { default: mongoose } = require("mongoose");
 
 // Controller to create a new project
 const createContact = async (req, res) => {
   const { firstName, lastName, email, companyName, roles, createdBy } = req.body;
-
+  console.log('create contact route hit', req.body)
   // Validation to check if all required fields are present
   if (!firstName || !lastName || !email || !companyName || !roles || !createdBy) {
     return res.status(400).json({
@@ -16,17 +18,29 @@ const createContact = async (req, res) => {
 
   try {
     const user = await User.findById(createdBy);
+    console.log('user', user)
     if (!user || !user.isEmailVerified) {
       return res.status(400).json({
         message: 'Email needs to be verified before creating a contact.',
       });
     }
 
+       // Search the user collection to match the email field
+       const matchingUser = await User.findOne({ email });
+    
+       let isUserFlag = false;
+       if (matchingUser) {
+         isUserFlag = true; // Set isUser to true if email matches a user
+       }
+
     const newContact = new Contact({
-      firstName, lastName, email, companyName, roles, createdBy
+      firstName, lastName, email, companyName, roles, createdBy, isUser: isUserFlag,
     });
+    
+    console.log('newContact', newContact)
 
     const savedContact = await newContact.save();
+    console.log('saved contact', savedContact)
     res.status(201).json(savedContact);
   } catch (error) {
     console.log(error)
@@ -41,11 +55,11 @@ const getAllContacts = async (req, res) => {
 
   try {
     const contacts = await Contact.find()
-      .skip((page - 1) * limit) // Skip the appropriate number of documents
-      .limit(parseInt(limit)); // Limit the number of documents
-    const totalDocuments = await Contact.countDocuments(); // Total number of documents in collection
+     .skip((page - 1) * limit) 
+      .limit(parseInt(limit)); 
+    const totalDocuments = await Contact.countDocuments(); 
     const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
-    
+
     res.status(200).json({
       page: parseInt(page),
       totalPages,
@@ -53,7 +67,7 @@ const getAllContacts = async (req, res) => {
       contacts,
     });
   } catch (error) {
-    
+
     res.status(500).json({ message: error.message });
   }
 };
@@ -62,11 +76,11 @@ const getAllContacts = async (req, res) => {
 const getContactById = async (req, res) => {
   const { id } = req.params;
   try {
-    const project = await Project.findById(id);
-    if (!project) {
+    const contact = await Contact.findById(id);
+    if (!contact) {
       return res.status(404).json({ message: "Project not found" });
     }
-    res.status(200).json(project);
+    res.status(200).json(contact);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -78,7 +92,7 @@ const updateContact = async (req, res) => {
   const {
     firstName, lastName, email, companyName, roles
   } = req.body;
-
+  console.log('update contact', req.body)
   try {
 
     const updatedContact = await Contact.findByIdAndUpdate(
@@ -116,13 +130,13 @@ const deleteContact = async (req, res) => {
 const getContactsByUserId = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(req.params)
+    console.log('get contact by id', req.params)
     if (!id) {
       return res.status(400).json({ message: 'createdBy ID is required' });
     }
 
-    const contacts = await Contact.find({createdBy:id });
-    
+    const contacts = await Contact.find({ createdBy: id });
+
     if (contacts.length === 0) {
       return res.status(404).json({ message: 'No contacts found for this user' });
     }
@@ -181,5 +195,7 @@ module.exports = {
   updateContact,
   deleteContact,
   getContactsByUserId,
-  searchContactsByFirstName
+  searchContactsByFirstName,
+  getContactsByUserId,
+  // createContactForMemberTab
 };
