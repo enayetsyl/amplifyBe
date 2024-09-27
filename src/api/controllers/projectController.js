@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs");
 const Project = require("../models/projectModel");
 const { validationResult } = require("express-validator");
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const Meeting = require("../models/meetingModel");
 const User = require("../models/userModel");
 
@@ -13,13 +13,13 @@ const createProject = async (req, res) => {
     // Extract formData from the request body
     session.startTransaction();
     const formData = req.body;
-
+    console.log("form data", formData);
 
     // Step 0: Check if the user who is creating the project has a verified email
     const user = await User.findById(formData.createdBy);
     if (!user || !user.isEmailVerified) {
       res.status(400).json({
-        message: 'Email needs to be verified before creating a project.',
+        message: "Email needs to be verified before creating a project.",
       });
       return;
     }
@@ -61,17 +61,16 @@ const createProject = async (req, res) => {
 
     await session.commitTransaction();
     session.endSession();
-    console.log(savedProject, newMeeting)
+    console.log(savedProject, newMeeting);
     res.status(201).json({
-      message: 'Project and meeting created successfully',
+      message: "Project and meeting created successfully",
       projectId: savedProject._id,
     });
-
   } catch (error) {
-    console.error('Error creating project:', error);
+    console.error("Error creating project:", error);
     res.status(500).json({
-      message: 'Failed to create project',
-      error: error.message
+      message: "Failed to create project",
+      error: error.message,
     });
   }
 };
@@ -80,26 +79,22 @@ const createProject = async (req, res) => {
 const getAllProjects = async (req, res) => {
   const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
   const { id } = req.params; // Get the user ID from the route parameters
+  console.log("get all projects id", id);
   try {
     // Find projects where createdBy matches the provided user ID or userId in the people array matches the user ID
-    const userData = await User.findById(id)
+    const userData = await User.findById(id);
+    console.log("user data", userData);
     const userEmail = userData.email;
 
     const projects = await Project.find({
-      $or: [
-        { createdBy: id },
-        { 'members.email': userEmail }
-      ]
+      $or: [{ createdBy: id }, { "members.email": userEmail }],
     })
     .populate('members.userId', 'firstName lastName addedDate lastUpdatedOn')
       .skip((page - 1) * limit) 
       .limit(parseInt(limit)); 
 
     const totalDocuments = await Project.countDocuments({
-      $or: [
-        { createdBy: id },
-        { 'members.email': userEmail }
-      ]
+      $or: [{ createdBy: id }, { "members.email": userEmail }],
     }); // Total number of documents matching the criteria
     const totalPages = Math.ceil(totalDocuments / limit); // Calculate total number of pages
 
@@ -199,177 +194,61 @@ const deleteProject = async (req, res) => {
   }
 };
 
-// Project status change
-const projectStatusChange = async (req, res) => {
-  const { projectId } = req.params;
-  const { status } = req.body;
+// DELETE route
+//search API
 
-  // Validate status to ensure it's one of the allowed values
-  const validStatuses = ['Draft', 'Active', 'Complete', 'Inactive', 'Closed'];
-  if (!validStatuses.includes(status)) {
+const searchProjectsByFirstName = async (req, res) => {
+  const { name } = req.query; // Get the firstName from query parameters
+
+  // Check if firstName query parameter is provided
+  if (!name) {
     return res.status(400).json({
-      message: "Invalid status. Status must be one of 'Draft', 'Active', 'Complete', 'Inactive', or 'Closed'.",
+      message: "Please provide a firstName to search for.",
     });
   }
 
   try {
-    // Find the project by ID and update the status
-    const updatedProject = await Project.findByIdAndUpdate(
-      projectId,
-      { status, updatedAt: Date.now() },
-      { new: true } // Return the updated document
+    console.log(`Searching for Projects with firstName: ${name}`);
+
+    // Search for Projects by matching the first name (case-insensitive)
+    const Projects = await Project.find({
+      name: { $regex: name, $options: "i" },
+    });
+
+    // Log the number of Projects found
+    console.log(
+      `${Projects.length} contact(s) found for the search term: ${name}`
     );
 
-    if (!updatedProject) {
-      return res.status(404).json({ message: 'Project not found' });
-    }
-// test
-    res.status(200).json({
-      message: 'Project status updated successfully',
-      project: updatedProject,
-    });
-  } catch (error) {
-    console.error('Error updating project status:', error);
-    res.status(500).json({
-      message: 'Failed to update project status',
-      error: error.message,
-    });
-  }
-};
-
-// Edit project general info
-
-const updateGeneralProjectInfo = async (req, res) => {
-  const { projectId } = req.params; 
-  const { name, description, startDate, endDate, projectPasscode } = req.body; 
-
-  try {
-    // Validate the input
-    if (!name || !startDate || !projectPasscode) {
-      return res.status(400).json({ message: 'Name, Start Date, and Project Passcode are required.' });
-    }
-
-    // Find the project by its ID
-    const project = await Project.findById(projectId);
-
-    if (!project) {
-      return res.status(404).json({ message: 'Project not found.' });
-    }
-
-    // Update project fields with the new values
-    project.name = name;
-    project.description = description || project.description;
-    project.startDate = startDate;
-    project.endDate = endDate || project.endDate;
-    project.projectPasscode = projectPasscode;
-
-    // Save the updated project
-    await project.save();
-
-    return res.status(200).json({ message: 'Project updated successfully.', project });
-  } catch (error) {
-    console.error('Error updating project:', error);
-    return res.status(500).json({ message: 'Server error. Could not update the project.' });
-  }
-};
-
-const addPeopleIntoProject = async (req, res) => {
-  const { projectId, people } = req.body;
-
-  try {
-    const project = await Project.findById(projectId);
-    if (!project) {
-      return res.status(404).json({ message: 'Project not found' });
-    }
-
-    people.forEach((person) => {
-      project.members.push({
-        userId: person.personId,
-        roles: person.roles,
-        email: person.email,
+    if (Projects.length === 0) {
+      return res.status(404).json({
+        message: `No Projects found with the first name: ${name}`,
       });
-    });
-
-    await project.save();
-    res.status(200).json({ message: 'People added successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error adding people', error });
-  }
-}
-
-const editMemberRole = async(req, res) => {
-
-  try {
-    const { projectId } = req.params;
-    const { updatedMember } = req.body;
-
-   
-    // Find the project by ID and update the specific member's roles
-    const updatedProject = await Project.findOneAndUpdate(
-      { _id: projectId, 'members._id': updatedMember._id }, 
-      {
-        $set: { 'members.$.roles': updatedMember.roles } 
-      },
-      { new: true } 
-    );
-
- 
-
-    if (!updatedProject) {
-      return res.status(404).json({ message: 'Project or member not found' });
     }
 
-    return res.status(200).json({
-      message: 'Member roles updated successfully',
-      updatedProject,
-    });
+    res.status(200).json(Projects);
   } catch (error) {
-    console.error('Error updating member roles:', error);
-    return res.status(500).json({ message: 'Internal server error' });
-  }
-
-}
-
-const deleteMemberFromProject = async (req, res) => {
-  try {
-    const { projectId, memberId } = req.params;
-
-   
-    // Find the project and remove the member from the members array
-    const updatedProject = await Project.findOneAndUpdate(
-      { _id: projectId }, 
-      { $pull: { members: { _id: memberId } } },
-      { new: true } 
-    );
-
-    if (!updatedProject) {
-      return res.status(404).json({ message: 'Project or member not found' });
-    }
-console.log('updatedProject', updatedProject)
-    return res.status(200).json({
-      message: 'Member removed successfully',
-      updatedProject,
+    console.error(`Error during search: ${error.message}`);
+    res.status(500).json({
+      message:
+        "Server error while searching for Projects. Please try again later.",
     });
-  } catch (error) {
-    console.error('Error removing member from project:', error);
-    return res.status(500).json({ message: 'Internal server error' });
   }
 };
-
 
 module.exports = {
+  searchProjectsByFirstName,
   createProject,
   getAllProjects,
   getProjectById,
   updateProject,
   deleteProject,
-  projectStatusChange,
-  updateGeneralProjectInfo,
-  addPeopleIntoProject,
-  editMemberRole,
-  deleteMemberFromProject
+  // projectStatusChange,
+  // updateGeneralProjectInfo,
+  // addPeopleIntoProject,
+  // editMemberRole,
+  // deleteMemberFromProject
 };
-
 
 // const newProject = new Project({
 //   projectName: formData.projectName,

@@ -148,43 +148,54 @@ const getContactsByUserId = async (req, res) => {
   }
 };
 
-// create contact from member tab
-const createContactForMemberTab = async (req, res) => {
-  const { userId, projectId } = req.params;
+
+//search API
+const searchContactsByFirstName = async (req, res) => {
+  const { firstName } = req.query;  // Get the firstName from query parameters
+  
+  // Check if firstName query parameter is provided
+  if (!firstName) {
+    return res.status(400).json({
+      message: "Please provide a firstName to search for."
+    });
+  }
 
   try {
-    // Fetch all contacts created by the user (userId)
-    const contacts = await Contact.find({ createdBy: userId });
+    console.log(`Searching for contacts with firstName: ${firstName}`);
     
-    console.log('contacts', contacts)
-    // Fetch the project using projectId
-    const project = await Project.findById(projectId);
-
-    if (!project) {
-      return res.status(404).json({ message: "Project not found." });
+    // Search for contacts by matching the first name (case-insensitive)
+    const contacts = await Contact.find({ firstName: { $regex: firstName, $options: 'i' } });
+    
+    // Log the number of contacts found
+    console.log(`${contacts.length} contact(s) found for the search term: ${firstName}`);
+    
+    if (contacts.length === 0) {
+      return res.status(404).json({
+        message: `No contacts found with the first name: ${firstName}`
+      });
     }
-    console.log('project', project)
-    // Extract all member user IDs from the project
-    const projectMemberIds = project.members.map(member => member.userId.toString());
-
-    // Filter out contacts that are already members of the project
-    const nonMemberContacts = contacts.filter(contact => !projectMemberIds.includes(contact._id.toString()));
-
-    // Return the filtered list of contacts to the frontend
-    res.status(200).json(nonMemberContacts);
+    
+    res.status(200).json(contacts);
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: error.message });
+    console.error(`Error during search: ${error.message}`);
+    res.status(500).json({
+      message: "Server error while searching for contacts. Please try again later."
+    });
   }
 };
 
 
+// DELETE route
+
 module.exports = {
+  
   createContact,
   getAllContacts,
   getContactById,
   updateContact,
   deleteContact,
   getContactsByUserId,
-  createContactForMemberTab
+  searchContactsByFirstName,
+  getContactsByUserId,
+  // createContactForMemberTab
 };
