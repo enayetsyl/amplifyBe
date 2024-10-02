@@ -352,7 +352,7 @@ const acceptFromWaitingRoom = async (req, res) => {
         return res.status(400).json({ message: "Failed to add user to WebRTC room" });
       }
       iframeUrl = addUserResponse.data.iframeUrl.replace(/^"|"$/g, '');;
-      console.log('iframeUrl after participant join:', iframeUrl);
+      
     } catch (error) {
       console.error("Error adding user to WebRTC room:", error);
       await session.abortTransaction();
@@ -388,7 +388,7 @@ const acceptFromWaitingRoom = async (req, res) => {
 
 const getParticipantList = async (req, res) => {
   const { meetingId } = req.params;
-
+// console.log('get participant list meeting Id', meetingId);
   try {
     const liveMeeting = await LiveMeeting.findOne({ meetingId });
 
@@ -409,7 +409,7 @@ const getParticipantList = async (req, res) => {
 };
 const getRemovedParticipantsList = async (req, res) => {
   const { meetingId } = req.params;
-console.log('route hit for removed participants list');
+
   try {
     const liveMeeting = await LiveMeeting.findOne({ meetingId });
 
@@ -421,7 +421,7 @@ console.log('route hit for removed participants list');
     const removedParticipantsList = [
             ...liveMeeting.removedParticipants
     ];
-    console.log('removedParticipantsList:', removedParticipantsList);
+    
     res.status(200).json({ removedParticipantsList: removedParticipantsList });
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving removed participants list', error: error.message });

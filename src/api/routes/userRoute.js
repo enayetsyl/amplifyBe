@@ -31,5 +31,5 @@ module.exports = function (app) {
   app.get("/api/get-users", controller.findAll);
   app.post("/api/users/reset_password", controller.reset_password);
   app.post("/api/users/forgotPassword", controller.forgotPassword);
-  app.get("/verify", controller.verifymail);
+  app.get("/api/verify", controller.verifymail);
 };

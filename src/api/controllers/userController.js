@@ -6,6 +6,8 @@ const ExcelJS = require("exceljs");
 var jwt = require("jsonwebtoken");
 const { sendEmail, sendVerifyEmail } = require("../../config/email.config");
 const Contact = require("../models/contactModel");
+const { default: mongoose } = require("mongoose");
+
 
 const validatePassword = (password) => {
   const errors = [];
@@ -282,12 +284,27 @@ const forgotPassword = async (req, res) => {
 };
 
 const verifymail = async (req, res) => {
+  const id = req.query.id;
+  
   try {
+
+    const user = await userModel.findOne({ _id: id });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found', status: 404 });
+    }
+
+    // Check if the user is already verified
+    if (user.isEmailVerified) {
+      return res.status(200).json({ message: 'Account is already verified', status: 200 });
+    }
+
     const verifiedMail = await userModel.updateOne(
-      { _id: req.query.id },
-      { $set: { isEmailVerified: true } }
+      { _id: id }, // Correct query object
+      { $set: { isEmailVerified: true } },
+      
     );
-    console.log(verifiedMail);
+    return res.status(200).json({ message: 'Email successfully verified', status: 200 });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }

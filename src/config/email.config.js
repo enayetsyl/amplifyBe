@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+require("dotenv").config();
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -36,7 +37,7 @@ async function sendVerifyEmail(name, email, id) {
       to: email,
       subject: "for Verification mail",
       html: `<p>Hi ${name},</p>
-      <p>Please click here to <a href="http://localhost:3000/accountActivation?id=${id}">verify your email</a>.</p>`,
+      <p>Please click here to <a href="${process.env.FRONTEND_BASE_URL}/verify-account?id=${id}">verify your email</a>.</p>`,
     };
     transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
@@ -49,6 +50,8 @@ async function sendVerifyEmail(name, email, id) {
     console.log(error.message);
   }
 }
+
+
 
 const sendStatusChangeEmail = async (ticket) => {
   try {
