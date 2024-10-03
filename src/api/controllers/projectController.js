@@ -375,7 +375,28 @@ console.log('updatedProject', updatedProject)
   }
 };
 
+const updateBulkMembers = async (req,res) => {
+  try {
+    const { projectId, members } = req.body;
+    console.log('projectId', projectId)
 
+    const updatedProject = await Project.updateOne(
+      { _id: projectId },
+      { $set: {members: members} }, 
+    );
+    console.log('updated project', updatedProject)
+
+    if (!updatedProject) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    return res.status(200).json({ message: 'Members updated successfully', project: updatedProject });
+  } catch (error) {
+    console.error('Error updating bulk members:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+    
+  }
+}
 
 
 
@@ -396,36 +417,7 @@ module.exports = {
   updateGeneralProjectInfo,
   addPeopleIntoProject,
   editMemberRole,
-  deleteMemberFromProject
+  deleteMemberFromProject,
+  updateBulkMembers
 };
 
-// const newProject = new Project({
-//   projectName: formData.projectName,
-//   projectDescription: formData.projectDescription,
-//   endDate: formData.endDate,
-//   projectPasscode: formData.projectPasscode,
-//   createdBy: formData.createdBy,
-//   people: formData.people,
-//   meetingTitle: formData.meetingTitle,
-//   meetingModerator: formData.meetingModerator,
-//   meetingDescription: formData.meetingDescription,
-//   startDate: formData.startDate,
-//   startTime: formData.startTime,
-//   timeZone: formData.timeZone,
-//   duration: formData.duration,
-//   ongoing: formData.ongoing,
-//   enableBreakoutRoom: formData.enableBreakoutRoom,
-//   meetingPasscode: formData.meetingPasscode,
-//   status: 'Draft',
-//   tags: formData.tags || [],
-//   // role: formData.role || []
-// });
-
-// // Save the project to the database
-// await newProject.save();
-
-// // Send a success response back to the frontend
-// res.status(201).json({
-//   message: 'Project created successfully',
-//   project: newProject
-// });
