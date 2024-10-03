@@ -301,6 +301,88 @@ const updateGeneralProjectInfo = async (req, res) => {
   }
 };
 
+const addPeopleIntoProject = async (req, res) => {
+  const { projectId, people } = req.body;
+  try {
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+    people.forEach((person) => {
+      project.members.push({
+        userId: person.personId,
+        roles: person.roles,
+        email: person.email,
+      });
+    });
+    await project.save();
+    res.status(200).json({ message: 'People added successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding people', error });
+  }
+}
+
+
+const editMemberRole = async(req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { updatedMember } = req.body;
+   
+    // Find the project by ID and update the specific member's roles
+    const updatedProject = await Project.findOneAndUpdate(
+      { _id: projectId, 'members._id': updatedMember._id }, 
+      {
+        $set: { 'members.$.roles': updatedMember.roles } 
+      },
+      { new: true } 
+    );
+
+ 
+    if (!updatedProject) {
+      return res.status(404).json({ message: 'Project or member not found' });
+    }
+    return res.status(200).json({
+      message: 'Member roles updated successfully',
+      updatedProject,
+    });
+  } catch (error) {
+    console.error('Error updating member roles:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+const deleteMemberFromProject = async (req, res) => {
+  try {
+    const { projectId, memberId } = req.params;
+   
+    // Find the project and remove the member from the members array
+    const updatedProject = await Project.findOneAndUpdate(
+      { _id: projectId }, 
+      { $pull: { members: { _id: memberId } } },
+      { new: true } 
+    );
+    if (!updatedProject) {
+      return res.status(404).json({ message: 'Project or member not found' });
+    }
+console.log('updatedProject', updatedProject)
+    return res.status(200).json({
+      message: 'Member removed successfully',
+      updatedProject,
+    });
+  } catch (error) {
+    console.error('Error removing member from project:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+
+
+
+
+
+
+
 
 
 module.exports = {
@@ -312,9 +394,9 @@ module.exports = {
   deleteProject,
   projectStatusChange,
   updateGeneralProjectInfo,
-  // addPeopleIntoProject,
-  // editMemberRole,
-  // deleteMemberFromProject
+  addPeopleIntoProject,
+  editMemberRole,
+  deleteMemberFromProject
 };
 
 // const newProject = new Project({
