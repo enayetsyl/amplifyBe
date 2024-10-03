@@ -8,6 +8,13 @@ module.exports = function (app) {
   app.delete("/api/delete/project/:id", controller.deleteProject);
   // New search API for contacts by first name
   app.get("/api/search/project", controller.searchProjectsByFirstName);
+
+  //Following are restored from the previous code
+  app.put("/api/change-project-status/:projectId", controller.projectStatusChange);
+  // app.put("/api/update-general-project-info/:projectId", controller.updateGeneralProjectInfo);
+  // app.put("/api/app-people-to-project", controller.addPeopleIntoProject);
+  // app.put("/api/edit-member-role/:projectId", controller.editMemberRole);
+  // app.delete("/api/delete-member-from-project/:projectId/:memberId", controller.deleteMemberFromProject);
 };
 
 // for usage of this search Api

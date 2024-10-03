@@ -126,6 +126,7 @@ const getProjectById = async (req, res) => {
 // Controller to update a project
 const updateProject = async (req, res) => {
   const { id } = req.params;
+  console.log('updated project id', id)
   const {
     name,
     description,
@@ -236,6 +237,46 @@ const searchProjectsByFirstName = async (req, res) => {
   }
 };
 
+const projectStatusChange = async (req, res) => {
+  const { projectId } = req.params;
+  const { status } = req.body;
+  // Validate status to ensure it's one of the allowed values
+  const validStatuses = ['Draft', 'Active', 'Complete', 'Inactive', 'Closed'];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({
+      message: "Invalid status. Status must be one of 'Draft', 'Active', 'Complete', 'Inactive', or 'Closed'.",
+    });
+  }
+
+  try {
+// Find the project by ID and update the status
+const updatedProject = await Project.findByIdAndUpdate(
+  projectId,
+  { status, updatedAt: Date.now() },
+  { new: true } // Return the updated document
+);
+if (!updatedProject) {
+  return res.status(404).json({ message: 'Project not found' });
+}
+// test
+res.status(200).json({
+  message: 'Project status updated successfully',
+  project: updatedProject,
+});
+} catch (error) {
+console.error('Error updating project status:', error);
+res.status(500).json({
+  message: 'Failed to update project status',
+  error: error.message,
+});
+}
+};
+// Edit project general info
+
+
+
+
+
 module.exports = {
   searchProjectsByFirstName,
   createProject,
@@ -243,7 +284,7 @@ module.exports = {
   getProjectById,
   updateProject,
   deleteProject,
-  // projectStatusChange,
+  projectStatusChange,
   // updateGeneralProjectInfo,
   // addPeopleIntoProject,
   // editMemberRole,
