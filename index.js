@@ -27,6 +27,8 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Import models
 const User = require("./src/api/models/userModelMessage.js");
@@ -51,6 +53,7 @@ require("./src/api/routes/moderatorInvitationRoute.js")(app);
 require("./src/api/routes/breakoutroomRoutes.js")(app);
 require("./src/api/routes/videoRoute.js")(app);
 require("./src/api/routes/companyRoute.js")(app);
+require("./src/api/routes/repositoryRoute.js")(app);
 
 mongoose.set("strictQuery", false);
 
@@ -78,8 +81,7 @@ app.use(
     saveUninitialized: true,
   })
 );
-app.use(bodyParser.json({ limit: "50mb" }));
-app.use(bodyParser.urlencoded({ extended: true }));
+
 
 // Use the user routes
 // app.use("/api", uploadFileRoutes);

@@ -5,7 +5,7 @@ const { validationResult } = require("express-validator");
 // Controller to create a new poll
 const createPoll = async (req, res) => {
   // Check for validation errors
-  console.log('create pool route hit')
+  console.log('create poll route hit')
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
