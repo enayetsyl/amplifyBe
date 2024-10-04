@@ -108,7 +108,7 @@ const getAllProjects = async (req, res) => {
 const getProjectById = async (req, res) => {
   const { id } = req.params;
   try {
-    const project = await Project.findById(id);
+    const project = await Project.findById(id).populate('members.userId', 'firstName lastName addedDate lastUpdatedOn');
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
