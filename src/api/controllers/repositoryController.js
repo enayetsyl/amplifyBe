@@ -13,9 +13,7 @@ cloudinary.config({
 const createRepository = async (req,res) => {
   let filePath = req.file ? req.file.path : null;
   try {
-    // Log req.body and req.file for debugging
-    console.log('req.body', req.body);
-    console.log('req.file', req.file); 
+   
 
     // Check if file and meeting ID are provided
     if (!req.file || !req.body.meetingId) {
@@ -36,7 +34,6 @@ const createRepository = async (req,res) => {
         folder: 'repository_files', // Cloudinary folder for uploads
       });
       cloudinaryLink = result.secure_url;
-      console.log('cloudinaryLink', cloudinaryLink);
     } catch (uploadError) {
       console.error('Error uploading to Cloudinary:', uploadError);
       return res.status(500).json({ error: 'Failed to upload file to Cloudinary.' });
@@ -80,7 +77,6 @@ const getRepositoryByProjectId = async(req, res) => {
   try {
     const projectId = req.params.projectId;
     const repositories = await Repository.find({ projectId });
-    console.log('repository', repositories);
     res.status(200).json({message: 'Repositories fetched successfully', repositories});
     
   } catch (error) {

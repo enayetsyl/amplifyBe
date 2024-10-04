@@ -5,14 +5,14 @@ const { validationResult } = require("express-validator");
 // Controller to create a new poll
 const createPoll = async (req, res) => {
   // Check for validation errors
-  console.log('create poll route hit')
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
 
   const { project, pollName, isActive, questions, createdBy} = req.body;
-  console.log('req.body', req.body);
+  
 
   try {
     // Check if the project exists
@@ -21,7 +21,6 @@ const createPoll = async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    console.log('existingProject', existingProject);
 
     // Create a new poll instance
     const newPoll = new Poll({
@@ -34,7 +33,6 @@ const createPoll = async (req, res) => {
 
     // Save the poll to the database
     const savedPoll = await newPoll.save();
-console.log('savedPoll', savedPoll);
     res.status(201).json(savedPoll); // Respond with the saved poll
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -44,7 +42,6 @@ console.log('savedPoll', savedPoll);
 
 // Controller to get all polls with pagination
 const getAllPolls = async (req, res) => {
-  console.log("req.params", req.params);
   const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
 
   try {

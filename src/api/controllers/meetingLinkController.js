@@ -27,7 +27,7 @@ Your Company Name`,
 
   try {
     let info = await transporter.sendMail(mailOptions);
-    console.log("Email sent: " + info.response);
+   
   } catch (error) {
     console.error("Error sending email:", error);
     throw error; // Rethrow the error to be caught by the calling function

@@ -13,7 +13,6 @@ const createProject = async (req, res) => {
     // Extract formData from the request body
     session.startTransaction();
     const formData = req.body;
-    console.log("form data", formData);
 
     // Step 0: Check if the user who is creating the project has a verified email
     const user = await User.findById(formData.createdBy);
@@ -36,7 +35,6 @@ const createProject = async (req, res) => {
       members: formData.members,
       status: formData.status,
     });
-    console.log('new project', newProject)
     const savedProject = await newProject.save({ session });
 
     // Step 2: Create the meetings associated with the project
@@ -61,7 +59,6 @@ const createProject = async (req, res) => {
 
     await session.commitTransaction();
     session.endSession();
-    console.log(savedProject, newMeeting);
     res.status(201).json({
       message: "Project and meeting created successfully",
       projectId: savedProject._id,
@@ -79,11 +76,9 @@ const createProject = async (req, res) => {
 const getAllProjects = async (req, res) => {
   const { page = 1, limit = 10 } = req.query; // Default to page 1 and 10 items per page
   const { id } = req.params; // Get the user ID from the route parameters
-  console.log("get all projects id", id);
   try {
     // Find projects where createdBy matches the provided user ID or userId in the people array matches the user ID
     const userData = await User.findById(id);
-    console.log("user data", userData);
     const userEmail = userData.email;
 
     const projects = await Project.find({
@@ -126,7 +121,6 @@ const getProjectById = async (req, res) => {
 // Controller to update a project
 const updateProject = async (req, res) => {
   const { id } = req.params;
-  console.log('updated project id', id)
   const {
     name,
     description,
@@ -182,7 +176,6 @@ const updateProject = async (req, res) => {
 };
 // DELETE route
 const deleteProject = async (req, res) => {
-  console.log("f", req);
   const { id } = req.params; // Extract ID from request parameters
   try {
     const deletedProject = await Project.findByIdAndDelete(id);
@@ -209,17 +202,13 @@ const searchProjectsByFirstName = async (req, res) => {
   }
 
   try {
-    console.log(`Searching for Projects with firstName: ${name}`);
 
     // Search for Projects by matching the first name (case-insensitive)
     const Projects = await Project.find({
       name: { $regex: name, $options: "i" },
     });
 
-    // Log the number of Projects found
-    console.log(
-      `${Projects.length} contact(s) found for the search term: ${name}`
-    );
+   
 
     if (Projects.length === 0) {
       return res.status(404).json({
@@ -315,8 +304,10 @@ const addPeopleIntoProject = async (req, res) => {
         email: person.email,
       });
     });
-    await project.save();
-    res.status(200).json({ message: 'People added successfully' });
+    const updatedProject = await project.save();
+    const populatedProject = await Project.findById(updatedProject._id).populate('members.userId');
+
+    res.status(200).json({ message: 'People added successfully', updatedProject: populatedProject  });
   } catch (error) {
     res.status(500).json({ message: 'Error adding people', error });
   }
@@ -364,10 +355,10 @@ const deleteMemberFromProject = async (req, res) => {
     if (!updatedProject) {
       return res.status(404).json({ message: 'Project or member not found' });
     }
-console.log('updatedProject', updatedProject)
+    const populatedProject = await Project.findById(projectId).populate('members.userId');
     return res.status(200).json({
       message: 'Member removed successfully',
-      updatedProject,
+      updatedProject: populatedProject,
     });
   } catch (error) {
     console.error('Error removing member from project:', error);
@@ -378,13 +369,11 @@ console.log('updatedProject', updatedProject)
 const updateBulkMembers = async (req,res) => {
   try {
     const { projectId, members } = req.body;
-    console.log('projectId', projectId)
 
     const updatedProject = await Project.updateOne(
       { _id: projectId },
       { $set: {members: members} }, 
     );
-    console.log('updated project', updatedProject)
 
     if (!updatedProject) {
       return res.status(404).json({ message: 'Project not found' });

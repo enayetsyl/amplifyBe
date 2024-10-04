@@ -50,7 +50,6 @@ const signup = async (req, res) => {
     const { firstName, lastName, email, password, terms } = req.body;
 
     // Log the received body for debugging
-    console.log("Received data:", req.body);
 
     // Validate required fields
     if (!(firstName && lastName && email && password && terms !== undefined)) {
@@ -93,7 +92,6 @@ const signup = async (req, res) => {
     });
     // Save the new user
     await newUser.save();
-    console.log("new registered user", newUser);
 
     // Send a verification email
     sendVerifyEmail(firstName, email, newUser._id);
@@ -103,7 +101,6 @@ const signup = async (req, res) => {
     if (contacts.length > 0) {
       // Update all matching contacts to set isUser field to true
       await Contact.updateMany({ email }, { $set: { isUser: true } });
-      console.log(`Updated ${contacts.length} contacts to set isUser to true.`);
     }
 
     // Respond with success message
@@ -120,7 +117,6 @@ const signup = async (req, res) => {
 const signin = async (req, res) => {
   try {
     const user = await userModel.findOne({ email: req.body.email });
-    console.log("login user", user);
     if (!user) {
       return res.status(404).json({ message: "User Not found.", status: 404 });
     }
@@ -155,7 +151,6 @@ const signin = async (req, res) => {
       accessToken: token,
     });
   } catch (error) {
-    console.log("error in login", error);
     return res.status(500).json({ message: error.message, status: 500 });
   }
 };

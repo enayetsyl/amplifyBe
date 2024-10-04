@@ -39,7 +39,7 @@ const getAllMeetings = async (req, res) => {
       .skip(skip)
       .limit(limit);
       
-    // console.log('meetings', meetings)
+   
     // Count total documents matching the projectId
     const totalDocuments = await Meeting.countDocuments({ projectId: req.params.projectId  });
 
@@ -72,11 +72,10 @@ const getAllMeetings = async (req, res) => {
 //Verify moderator meeting passcode
 const verifyModeratorMeetingPasscode = async (req, res) => {
   const { meetingId, passcode } = req.body;
-  console.log(meetingId, passcode)
+
   try {
     const meeting = await Meeting.findById(meetingId);
-    console.log(meeting.meetingPasscode)
-    console.log(meeting.meetingPasscode === passcode)
+    
     if (!meeting) {
       return res.status(404).json({ message: "Meeting not found" });
     }

@@ -8,7 +8,7 @@ const { default: mongoose } = require("mongoose");
 // Controller to create a new project
 const createContact = async (req, res) => {
   const { firstName, lastName, email, companyName, roles, createdBy } = req.body;
-  console.log('create contact route hit', req.body)
+ 
   // Validation to check if all required fields are present
   if (!firstName || !lastName || !email || !companyName || !roles || !createdBy) {
     return res.status(400).json({
@@ -18,7 +18,7 @@ const createContact = async (req, res) => {
 
   try {
     const user = await User.findById(createdBy);
-    console.log('user', user)
+   
     if (!user || !user.isEmailVerified) {
       return res.status(400).json({
         message: 'Email needs to be verified before creating a contact.',
@@ -37,13 +37,13 @@ const createContact = async (req, res) => {
       firstName, lastName, email, companyName, roles, createdBy, isUser: isUserFlag,
     });
     
-    console.log('newContact', newContact)
+   
 
     const savedContact = await newContact.save();
-    console.log('saved contact', savedContact)
+   
     res.status(201).json(savedContact);
   } catch (error) {
-    console.log(error)
+    
     res.status(500).json({ message: error.message });
   }
 };
@@ -92,7 +92,7 @@ const updateContact = async (req, res) => {
   const {
     firstName, lastName, email, companyName, roles
   } = req.body;
-  console.log('update contact', req.body)
+
   try {
 
     const updatedContact = await Contact.findByIdAndUpdate(
@@ -109,7 +109,7 @@ const updateContact = async (req, res) => {
 
     res.status(200).json(updatedContact);
   } catch (error) {
-    console.log('error in update contact function', error)
+    console.error('error in update contact function', error)
     res.status(500).json({ message: error.message });
   }
 };
@@ -130,7 +130,6 @@ const deleteContact = async (req, res) => {
 const getContactsByUserId = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('get contact by id', req.params)
     if (!id) {
       return res.status(400).json({ message: 'createdBy ID is required' });
     }
@@ -161,13 +160,12 @@ const searchContactsByFirstName = async (req, res) => {
   }
 
   try {
-    console.log(`Searching for contacts with firstName: ${firstName}`);
     
     // Search for contacts by matching the first name (case-insensitive)
     const contacts = await Contact.find({ firstName: { $regex: firstName, $options: 'i' } });
     
     // Log the number of contacts found
-    console.log(`${contacts.length} contact(s) found for the search term: ${firstName}`);
+    (`${contacts.length} contact(s) found for the search term: ${firstName}`);
     
     if (contacts.length === 0) {
       return res.status(404).json({
@@ -190,13 +188,11 @@ const createContactForMemberTab = async (req, res) => {
   try {
     // Fetch all contacts created by the user (userId)
     const contacts = await Contact.find({ createdBy: userId });
-    console.log('contacts', contacts)
     // Fetch the project using projectId
     const project = await Project.findById(projectId);
     if (!project) {
       return res.status(404).json({ message: "Project not found." });
     }
-    console.log('project', project)
     // Extract all member user IDs from the project
     const projectMemberIds = project.members.map(member => member.userId.toString());
     // Filter out contacts that are already members of the project
@@ -204,7 +200,7 @@ const createContactForMemberTab = async (req, res) => {
     // Return the filtered list of contacts to the frontend
     res.status(200).json(nonMemberContacts);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({ message: error.message });
   }
 };
