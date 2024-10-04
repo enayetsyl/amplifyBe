@@ -332,9 +332,10 @@ const editMemberRole = async(req, res) => {
     if (!updatedProject) {
       return res.status(404).json({ message: 'Project or member not found' });
     }
+    const populatedProject = await Project.findById(projectId).populate('members.userId');
     return res.status(200).json({
       message: 'Member roles updated successfully',
-      updatedProject,
+      updatedProject: populatedProject,
     });
   } catch (error) {
     console.error('Error updating member roles:', error);
@@ -379,7 +380,9 @@ const updateBulkMembers = async (req,res) => {
       return res.status(404).json({ message: 'Project not found' });
     }
 
-    return res.status(200).json({ message: 'Members updated successfully', project: updatedProject });
+    const populatedProject = await Project.findById(projectId).populate('members.userId');
+
+    return res.status(200).json({ message: 'Members updated successfully',  updatedProject: populatedProject });
   } catch (error) {
     console.error('Error updating bulk members:', error);
     return res.status(500).json({ message: 'Internal server error' });

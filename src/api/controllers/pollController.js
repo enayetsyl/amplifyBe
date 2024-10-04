@@ -33,7 +33,10 @@ const createPoll = async (req, res) => {
 
     // Save the poll to the database
     const savedPoll = await newPoll.save();
-    res.status(201).json(savedPoll); // Respond with the saved poll
+    const polls = await Poll.find({project})
+      .populate('createdBy', 'firstName lastName email')
+    res.status(201).json({ message: "Poll Saved Successfully", polls }); // Respond with the saved poll
+   
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -92,10 +95,11 @@ const changePollStatus = async(req, res) => {
     if (!poll) {
       return res.status(404).json({ message: "Poll not found" });
     }
-
+    const polls = await Poll.find({project: poll.project})
+      .populate('createdBy', 'firstName lastName email')
     return res.status(200).json({
       message: `Poll status changed to ${isActive ? "Active" : "Inactive"}`,
-      poll,
+      polls,
     });
   } catch (error) {
     console.error("Error updating poll status:", error);
@@ -120,8 +124,12 @@ const updatePoll = async (req, res) => {
       return res.status(404).json({ message: "Poll not found" });
     }
 
-
-    res.status(200).json(updatedPoll);
+    const polls = await Poll.find({project: updatedPoll.project})
+    .populate('createdBy', 'firstName lastName email')
+    res.status(200).json({
+      message: "Poll updated successfully",
+      polls,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -136,7 +144,9 @@ const deletePoll = async (req, res) => {
     if (!deletedPoll) {
       return res.status(404).json({ message: "Poll not found" });
     }
-    res.status(200).json({ message: "Poll deleted successfully" });
+    const polls = await Poll.find({project: deletedPoll.project})
+      .populate('createdBy', 'firstName lastName email')
+    res.status(200).json({ message: "Poll deleted successfully", polls });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
