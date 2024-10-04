@@ -90,9 +90,24 @@ const verifyModeratorMeetingPasscode = async (req, res) => {
   }
 };
 
+const getMeetingById = async(req, res) => {
+  const { meetingId } = req.params;
+  try {
+    const meeting = await Meeting.findById(meetingId).populate('moderator');
+    if (!meeting) {
+      return res.status(404).json({ message: "Meeting not found" });
+    }
+    res.status(200).json({message: "Meeting found", meetingDetails: meeting });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+  
+}
+
 
 module.exports = {
   createMeeting,
-  getAllMeetings, verifyModeratorMeetingPasscode
+  getAllMeetings, verifyModeratorMeetingPasscode,
+  getMeetingById
 
 };
